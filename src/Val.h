@@ -342,7 +342,7 @@ public:
 
 	// To be overridden by mutable derived class to enable change
 	// notification.
-	virtual notifier::Modifiable* Modifiable()	{ return nullptr; }
+	virtual zeek::notifier::detail::Modifiable* Modifiable()	{ return nullptr; }
 
 #ifdef DEBUG
 	// For debugging, we keep a reference to the global ID to which a
@@ -772,7 +772,7 @@ protected:
 	TableVal* table;
 };
 
-class TableVal final : public Val, public notifier::Modifiable {
+class TableVal final : public Val, public zeek::notifier::detail::Modifiable {
 public:
 	explicit TableVal(zeek::TableTypePtr t, zeek::detail::AttributesPtr attrs = nullptr);
 
@@ -1013,7 +1013,7 @@ public:
 	[[deprecated("Remove in v4.1.  Use MakeHashKey().")]]
 	zeek::detail::HashKey* ComputeHash(const Val* index) const;
 
-	notifier::Modifiable* Modifiable() override	{ return this; }
+	zeek::notifier::detail::Modifiable* Modifiable() override	{ return this; }
 
 	// Retrieves and saves all table state (key-value pairs) for
 	// tables whose index type depends on the given zeek::RecordType.
@@ -1103,7 +1103,7 @@ protected:
 	static ParseTimeTableStates parse_time_table_states;
 };
 
-class RecordVal final : public Val, public notifier::Modifiable {
+class RecordVal final : public Val, public zeek::notifier::detail::Modifiable {
 public:
 	[[deprecated("Remove in v4.1.  Construct from IntrusivePtr instead.")]]
 	explicit RecordVal(zeek::RecordType* t, bool init_fields = true);
@@ -1256,7 +1256,7 @@ public:
 	unsigned int MemoryAllocation() const override;
 	void DescribeReST(ODesc* d) const override;
 
-	notifier::Modifiable* Modifiable() override	{ return this; }
+	zeek::notifier::detail::Modifiable* Modifiable() override	{ return this; }
 
 	// Extend the underlying arrays of record instances created during
 	// parsing to match the number of fields in the record type (they may
@@ -1293,7 +1293,7 @@ protected:
 };
 
 
-class VectorVal final : public Val, public notifier::Modifiable {
+class VectorVal final : public Val, public zeek::notifier::detail::Modifiable {
 public:
 	[[deprecated("Remove in v4.1.  Construct from IntrusivePtr instead.")]]
 	explicit VectorVal(zeek::VectorType* t);
@@ -1373,7 +1373,7 @@ public:
 	// Won't shrink size.
 	unsigned int ResizeAtLeast(unsigned int new_num_elements);
 
-	notifier::Modifiable* Modifiable() override	{ return this; }
+	zeek::notifier::detail::Modifiable* Modifiable() override	{ return this; }
 
 	/**
 	 * Inserts an element at the given position in the vector.  All elements
