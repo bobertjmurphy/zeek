@@ -14,7 +14,7 @@
 using threading::Value;
 using threading::Field;
 
-namespace logging  {
+namespace zeek::logging {
 
 class RotationFinishedMessage final : public threading::OutputMessage<WriterFrontend>
 {
@@ -62,8 +62,6 @@ public:
 
 	bool Process() override	{ Object()->SetDisable(); return true; }
 };
-
-}
 
 // Backend methods.
 
@@ -331,3 +329,5 @@ bool WriterBackend::OnHeartbeat(double network_time, double current_time)
 	SendOut(new FlushWriteBufferMessage(frontend));
 	return DoHeartbeat(network_time, current_time);
 	}
+
+} // namespace zeek::logging
