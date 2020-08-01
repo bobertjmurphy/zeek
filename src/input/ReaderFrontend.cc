@@ -4,7 +4,7 @@
 #include "ReaderFrontend.h"
 #include "ReaderBackend.h"
 
-namespace input {
+namespace zeek::input {
 
 class InitMessage final : public threading::InputMessage<ReaderBackend>
 {
