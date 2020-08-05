@@ -18,7 +18,7 @@
 
 #include "Desc.h"
 #include "WriterFrontend.h"
-#include "WriterBackend.h"
+#include "BaseWriterBackend.h"
 #include "logging.bif.h"
 #include "plugin/Plugin.h"
 #include "plugin/Manager.h"
@@ -65,7 +65,7 @@ struct Manager::WriterInfo {
 	double interval;
 	Func* postprocessor;
 	WriterFrontend* writer;
-	WriterBackend::WriterInfo* info;
+	BaseWriterBackend::WriterInfo* info;
 	bool from_remote;
 	bool hook_initialized;
 	string instantiating_filter;
@@ -139,7 +139,7 @@ Manager::~Manager()
 		delete *s;
 	}
 
-WriterBackend* Manager::CreateBackend(WriterFrontend* frontend, EnumVal* tag)
+BaseWriterBackend* Manager::CreateBackend(WriterFrontend* frontend, EnumVal* tag)
 	{
 	Component* c = Lookup(tag);
 
@@ -149,7 +149,7 @@ WriterBackend* Manager::CreateBackend(WriterFrontend* frontend, EnumVal* tag)
 		return 0;
 		}
 
-	WriterBackend* backend = (*c->Factory())(frontend);
+	BaseWriterBackend* backend = (*c->Factory())(frontend);
 	assert(backend);
 
 	return backend;
@@ -835,7 +835,7 @@ bool Manager::Write(EnumVal* id, RecordVal* columns)
 			path = filter->path = filter->path_val->AsString()->CheckString();
 			}
 
-		WriterBackend::WriterInfo* info = 0;
+		BaseWriterBackend::WriterInfo* info = 0;
 		WriterFrontend* writer = 0;
 
 		if ( w != stream->writers.end() )
@@ -883,7 +883,7 @@ bool Manager::Write(EnumVal* id, RecordVal* columns)
 				arg_fields[j] = new threading::Field(*filter->fields[j]);
 				}
 
-			info = new WriterBackend::WriterInfo;
+			info = new BaseWriterBackend::WriterInfo;
 			info->path = copy_string(path.c_str());
 			info->network_time = network_time;
 
@@ -1140,13 +1140,13 @@ threading::Value** Manager::RecordToFilterVals(Stream* stream, Filter* filter,
 	return vals;
 	}
 
-bool Manager::CreateWriterForRemoteLog(EnumVal* id, EnumVal* writer, WriterBackend::WriterInfo* info,
+bool Manager::CreateWriterForRemoteLog(EnumVal* id, EnumVal* writer, BaseWriterBackend::WriterInfo* info,
 			   int num_fields, const threading::Field* const* fields)
 	{
 	return CreateWriter(id, writer, info, num_fields, fields, true, false, true);
 	}
 
-static void delete_info_and_fields(WriterBackend::WriterInfo* info, int num_fields, const threading::Field* const* fields)
+static void delete_info_and_fields(BaseWriterBackend::WriterInfo* info, int num_fields, const threading::Field* const* fields)
 	{
 	for ( int i = 0; i < num_fields; i++ )
 		delete fields[i];
@@ -1155,7 +1155,7 @@ static void delete_info_and_fields(WriterBackend::WriterInfo* info, int num_fiel
 	delete info;
 	}
 
-WriterFrontend* Manager::CreateWriter(EnumVal* id, EnumVal* writer, WriterBackend::WriterInfo* info,
+WriterFrontend* Manager::CreateWriter(EnumVal* id, EnumVal* writer, BaseWriterBackend::WriterInfo* info,
 				int num_fields, const threading::Field* const* fields, bool local, bool remote, bool from_remote,
 				const string& instantiating_filter)
 	{
@@ -1252,7 +1252,7 @@ WriterFrontend* Manager::CreateWriter(EnumVal* id, EnumVal* writer, WriterBacken
 
 void Manager::DeleteVals(int num_fields, threading::Value** vals)
 	{
-	// Note this code is duplicated in WriterBackend::DeleteVals().
+	// Note this code is duplicated in BaseWriterBackend::DeleteVals().
 	for ( int i = 0; i < num_fields; i++ )
 		delete vals[i];
 

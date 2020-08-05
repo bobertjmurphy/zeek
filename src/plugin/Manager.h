@@ -311,7 +311,7 @@ public:
 	 *               will be located in different thread, typically
 	 *               in manager or logger node).
 	 *
-	 * @param info WriterBackend::WriterInfo with information about the writer.
+	 * @param info BaseWriterBackend::WriterInfo with information about the writer.
 	 *
 	 * @param num_fields number of fields in the record being written.
 	 *
@@ -320,7 +320,7 @@ public:
 	void HookLogInit(const std::string& writer,
 	                 const std::string& instantiating_filter,
 	                 bool local, bool remote,
-	                 const logging::WriterBackend::WriterInfo& info,
+	                 const logging::BaseWriterBackend::WriterInfo& info,
 	                 int num_fields,
 	                 const threading::Field* const* fields) const;
 
@@ -338,7 +338,7 @@ public:
 	 *
 	 * @param filter Name of the filter being written to.
 	 *
-	 * @param info WriterBackend::WriterInfo with information about the writer.
+	 * @param info BaseWriterBackend::WriterInfo with information about the writer.
 	 *
 	 * @param num_fields number of fields in the record being written.
 	 *
@@ -352,7 +352,7 @@ public:
 	 */
 	bool HookLogWrite(const std::string& writer,
 	                  const std::string& filter,
-	                  const logging::WriterBackend::WriterInfo& info,
+	                  const logging::BaseWriterBackend::WriterInfo& info,
 	                  int num_fields, const threading::Field* const* fields,
 	                  threading::Value** vals) const;
 

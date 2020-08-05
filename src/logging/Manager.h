@@ -10,7 +10,7 @@
 #include "../plugin/ComponentManager.h"
 
 #include "Component.h"
-#include "WriterBackend.h"
+#include "BaseWriterBackend.h"
 
 namespace broker { struct endpoint_info; }
 class SerializationFormat;
@@ -146,7 +146,7 @@ public:
 	 *
 	 * @return Returns true if the writer was successfully created.
 	 */
-	bool CreateWriterForRemoteLog(EnumVal* id, EnumVal* writer, WriterBackend::WriterInfo* info,
+	bool CreateWriterForRemoteLog(EnumVal* id, EnumVal* writer, BaseWriterBackend::WriterInfo* info,
 				      int num_fields, const threading::Field* const* fields);
 
 	/**
@@ -232,14 +232,14 @@ protected:
 	friend class RotationFailedMessage;
 	friend class ::RotationTimer;
 
-	// Instantiates a new WriterBackend of the given type (note that
+	// Instantiates a new BaseWriterBackend of the given type (note that
 	// doing so creates a new thread!).
-	WriterBackend* CreateBackend(WriterFrontend* frontend, EnumVal* tag);
+	BaseWriterBackend* CreateBackend(WriterFrontend* frontend, EnumVal* tag);
 
 	//// Function also used by the RemoteSerializer.
 
 	// Takes ownership of fields and info.
-	WriterFrontend* CreateWriter(EnumVal* id, EnumVal* writer, WriterBackend::WriterInfo* info,
+	WriterFrontend* CreateWriter(EnumVal* id, EnumVal* writer, BaseWriterBackend::WriterInfo* info,
 				int num_fields, const threading::Field* const* fields,
 				bool local, bool remote, bool from_remote, const string& instantiating_filter="");
 

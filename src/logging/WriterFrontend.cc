@@ -5,7 +5,7 @@
 
 #include "Manager.h"
 #include "WriterFrontend.h"
-#include "WriterBackend.h"
+#include "BaseWriterBackend.h"
 
 using threading::Value;
 using threading::Field;
@@ -14,11 +14,11 @@ namespace logging  {
 
 // Messages sent from frontend to backend (i.e., "InputMessages").
 
-class InitMessage : public threading::InputMessage<WriterBackend>
+class InitMessage : public threading::InputMessage<BaseWriterBackend>
 {
 public:
-	InitMessage(WriterBackend* backend, const int num_fields, const Field* const* fields)
-		: threading::InputMessage<WriterBackend>("Init", backend),
+	InitMessage(BaseWriterBackend* backend, const int num_fields, const Field* const* fields)
+		: threading::InputMessage<BaseWriterBackend>("Init", backend),
 		num_fields(num_fields), fields(fields)
 			{}
 
@@ -30,12 +30,12 @@ private:
 	const Field * const* fields;
 };
 
-class RotateMessage : public threading::InputMessage<WriterBackend>
+class RotateMessage : public threading::InputMessage<BaseWriterBackend>
 {
 public:
-	RotateMessage(WriterBackend* backend, WriterFrontend* frontend, const char* rotated_path, const double open,
+	RotateMessage(BaseWriterBackend* backend, WriterFrontend* frontend, const char* rotated_path, const double open,
 		      const double close, const bool terminating)
-		: threading::InputMessage<WriterBackend>("Rotate", backend),
+		: threading::InputMessage<BaseWriterBackend>("Rotate", backend),
 		frontend(frontend),
 		rotated_path(copy_string(rotated_path)), open(open),
 		close(close), terminating(terminating) { }
@@ -52,11 +52,11 @@ private:
 	const bool terminating;
 };
 
-class WriteMessage : public threading::InputMessage<WriterBackend>
+class WriteMessage : public threading::InputMessage<BaseWriterBackend>
 {
 public:
-	WriteMessage(WriterBackend* backend, int num_fields, int num_writes, Value*** vals)
-		: threading::InputMessage<WriterBackend>("Write", backend),
+	WriteMessage(BaseWriterBackend* backend, int num_fields, int num_writes, Value*** vals)
+		: threading::InputMessage<BaseWriterBackend>("Write", backend),
 		num_fields(num_fields), num_writes(num_writes), vals(vals)	{}
 
 	virtual bool Process() { return Object()->Write(num_fields, num_writes, vals); }
@@ -67,11 +67,11 @@ private:
 	Value ***vals;
 };
 
-class SetBufMessage : public threading::InputMessage<WriterBackend>
+class SetBufMessage : public threading::InputMessage<BaseWriterBackend>
 {
 public:
-	SetBufMessage(WriterBackend* backend, const bool enabled)
-		: threading::InputMessage<WriterBackend>("SetBuf", backend),
+	SetBufMessage(BaseWriterBackend* backend, const bool enabled)
+		: threading::InputMessage<BaseWriterBackend>("SetBuf", backend),
 		enabled(enabled) { }
 
 	virtual bool Process() { return Object()->SetBuf(enabled); }
@@ -80,11 +80,11 @@ private:
 	const bool enabled;
 };
 
-class FlushMessage : public threading::InputMessage<WriterBackend>
+class FlushMessage : public threading::InputMessage<BaseWriterBackend>
 {
 public:
-	FlushMessage(WriterBackend* backend, double network_time)
-		: threading::InputMessage<WriterBackend>("Flush", backend),
+	FlushMessage(BaseWriterBackend* backend, double network_time)
+		: threading::InputMessage<BaseWriterBackend>("Flush", backend),
 		network_time(network_time) {}
 
 	virtual bool Process() { return Object()->Flush(network_time); }
@@ -98,7 +98,7 @@ private:
 
 using namespace logging;
 
-WriterFrontend::WriterFrontend(const WriterBackend::WriterInfo& arg_info, EnumVal* arg_stream, EnumVal* arg_writer, bool arg_local, bool arg_remote)
+WriterFrontend::WriterFrontend(const BaseWriterBackend::WriterInfo& arg_info, EnumVal* arg_stream, EnumVal* arg_writer, bool arg_local, bool arg_remote)
 	{
 	stream = arg_stream;
 	writer = arg_writer;
@@ -111,7 +111,7 @@ WriterFrontend::WriterFrontend(const WriterBackend::WriterInfo& arg_info, EnumVa
 	remote = arg_remote;
 	write_buffer = 0;
 	write_buffer_pos = 0;
-	info = new WriterBackend::WriterInfo(arg_info);
+	info = new BaseWriterBackend::WriterInfo(arg_info);
 
 	num_fields = 0;
 	fields = 0;

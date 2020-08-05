@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "WriterBackend.h"
+#include "BaseWriterBackend.h"
 
 namespace logging  {
 
@@ -11,7 +11,7 @@ class Manager;
 /**
  * Bridge class between the logging::Manager and backend writer threads. The
  * Manager instantiates one \a WriterFrontend for each open logging filter.
- * Each frontend in turns instantiates a WriterBackend-derived class
+ * Each frontend in turns instantiates a BaseWriterBackend-derived class
  * internally that's specific to the particular output format. That backend
  * runs in a new thread, and it receives messages from the frontend that
  * correspond to method called by the manager.
@@ -26,7 +26,7 @@ public:
 	 *
 	 * writer: The backend writer type, with the value corresponding to the
 	 * script-level \c Log::Writer enum (e.g., \a WRITER_ASCII). The
-	 * frontend will internally instantiate a WriterBackend of the
+	 * frontend will internally instantiate a BaseWriterBackend of the
 	 * corresponding type.
 	 *
 	 * info: The meta information struct for the writer.
@@ -38,7 +38,7 @@ public:
 	 *
 	 * Frontends must only be instantiated by the main thread.
 	 */
-	WriterFrontend(const WriterBackend::WriterInfo& info, EnumVal* stream, EnumVal* writer, bool local, bool remote);
+	WriterFrontend(const BaseWriterBackend::WriterInfo& info, EnumVal* stream, EnumVal* writer, bool local, bool remote);
 
 	/**
 	 * Destructor.
@@ -63,7 +63,7 @@ public:
 	 * the corresponding message there. If the backend method fails, it
 	 * sends a message back that will asynchronously call Disable().
 	 *
-	 * See WriterBackend::Init() for arguments. The method takes
+	 * See BaseWriterBackend::Init() for arguments. The method takes
 	 * ownership of \a fields.
 	 *
 	 * This method must only be called from the main thread.
@@ -84,7 +84,7 @@ public:
 	 * FlushWriteBuffer(). The backend writer triggers this with a
 	 * message at every heartbeat.
 	 *
-	 * See WriterBackend::Writer() for arguments (except that this method
+	 * See BaseWriterBackend::Writer() for arguments (except that this method
 	 * takes only a single record, not an array). The method takes
 	 * ownership of \a vals.
 	 *
@@ -99,7 +99,7 @@ public:
 	 * the corresponding message there. If the backend method fails, it
 	 * sends a message back that will asynchronously call Disable().
 	 *
-	 * See WriterBackend::SetBuf() for arguments.
+	 * See BaseWriterBackend::SetBuf() for arguments.
 	 *
 	 * This method must only be called from the main thread.
 	 */
@@ -126,7 +126,7 @@ public:
 	 * the corresponding message there. If the backend method fails, it
 	 * sends a message back that will asynchronously call Disable().
 	 *
-	 * See WriterBackend::Rotate() for arguments.
+	 * See BaseWriterBackend::Rotate() for arguments.
 	 *
 	 * This method must only be called from the main thread.
 	 */
@@ -162,7 +162,7 @@ public:
 	/**
 	 * Returns the additional writer information as passed into the constructor.
 	 */
-	const WriterBackend::WriterInfo& Info() const	{ return *info; }
+	const BaseWriterBackend::WriterInfo& Info() const	{ return *info; }
 
 	/**
 	 * Returns the number of log fields as passed into the constructor.
@@ -190,7 +190,7 @@ protected:
 	EnumVal* stream;
 	EnumVal* writer;
 
-	WriterBackend* backend;	// The backend we have instantiated.
+	BaseWriterBackend* backend;	// The backend we have instantiated.
 	bool disabled;	// True if disabled.
 	bool initialized;	// True if initialized.
 	bool buf;	// True if buffering is enabled (default).
@@ -198,7 +198,7 @@ protected:
 	bool remote;	// True if loggin remotely.
 
 	const char* name;	// Descriptive name of the
-	WriterBackend::WriterInfo* info;	// The writer information.
+	BaseWriterBackend::WriterInfo* info;	// The writer information.
 	int num_fields;	// The number of log fields.
 	const threading::Field* const*  fields;	// The log fields.
 

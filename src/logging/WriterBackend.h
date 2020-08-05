@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "BaseWriterBackend.h"
+
 #include "threading/MsgThread.h"
 
 #include "Component.h"
@@ -14,6 +16,7 @@ namespace logging  {
 
 class WriterFrontend;
 
+#if OLD
 /**
  * Base class for writer implementation. When the logging::Manager creates a
  * new logging filter, it instantiates a WriterFrontend. That then in turn
@@ -386,6 +389,36 @@ private:
 
 	int rotation_counter; // Tracks FinishedRotation() calls.
 };
+
+#else // OLD
+
+/**
+ * Base class for writer implementation. When the logging::Manager creates a
+ * new logging filter, it instantiates a WriterFrontend. That then in turn
+ * creates a WriterBackend of the right type. The frontend then forwards
+ * messages over the backend as its methods are called.
+ *
+ * All of this methods must be called only from the corresponding child
+ * thread (the constructor and destructor are the exceptions.)
+ */
+class WriterBackend : public BaseWriterBackend
+{
+public:
+    /**
+     * Constructor.
+     *
+     * @param frontend The frontend writer that created this backend. The
+     * *only* purpose of this value is to be passed back via messages as
+     * a argument to callbacks. One must not otherwise access the
+     * frontend, it's running in a different thread.
+     *
+     * @param name A descriptive name for writer's type (e.g., \c Ascii).
+     *
+     */
+    explicit WriterBackend(WriterFrontend* frontend);
+};
+
+#endif // OLD
 
 
 }

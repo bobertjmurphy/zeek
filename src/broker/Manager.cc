@@ -435,7 +435,7 @@ bool Manager::PublishIdentifier(std::string topic, std::string id)
 	}
 
 bool Manager::PublishLogCreate(EnumVal* stream, EnumVal* writer,
-			       const logging::WriterBackend::WriterInfo& info,
+			       const logging::BaseWriterBackend::WriterInfo& info,
 			       int num_fields, const threading::Field* const * fields,
 			       const broker::endpoint_info& peer)
 	{
@@ -1052,7 +1052,7 @@ bool bro_broker::Manager::ProcessLogCreate(broker::zeek::LogCreate lc)
 		return false;
 		}
 
-	auto writer_info = std::unique_ptr<logging::WriterBackend::WriterInfo>(new logging::WriterBackend::WriterInfo);
+	auto writer_info = std::unique_ptr<logging::BaseWriterBackend::WriterInfo>(new logging::BaseWriterBackend::WriterInfo);
 	if ( ! writer_info->FromBroker(std::move(lc.writer_info())) )
 		{
 		reporter->Warning("failed to unpack remote log writer info");

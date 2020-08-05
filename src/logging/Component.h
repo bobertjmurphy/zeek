@@ -9,7 +9,7 @@
 namespace logging {
 
 class WriterFrontend;
-class WriterBackend;
+class BaseWriterBackend;
 
 /**
  * Component description for plugins providing log writers.
@@ -17,7 +17,7 @@ class WriterBackend;
 class Component : public plugin::Component,
 		  public plugin::TaggedComponent<logging::Tag> {
 public:
-	typedef WriterBackend* (*factory_callback)(WriterFrontend* frontend);
+	typedef BaseWriterBackend* (*factory_callback)(WriterFrontend* frontend);
 
 	/**
 	 * Constructor.
@@ -27,7 +27,7 @@ public:
 	 *
 	 * @param factory A factory function to instantiate instances of the
 	 * writers's class, which must be derived directly or indirectly from
-	 * logging::WriterBackend. This is typically a static \c Instatiate()
+	 * logging::BaseWriterBackend. This is typically a static \c Instatiate()
 	 * method inside the class that just allocates and returns a new
 	 * instance.
 	 */

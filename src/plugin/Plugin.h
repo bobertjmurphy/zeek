@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "zeek-config.h"
-#include "logging/WriterBackend.h"
+#include "logging/BaseWriterBackend.h"
 
 // Increase this when making incompatible changes to the plugin API. Note
 // that the constant is never used in C code. It's picked up on by CMake.
@@ -247,7 +247,7 @@ public:
 	/**
 	 * Constructor with a WriterInfo argument.
 	 */
-	explicit HookArgument(const logging::WriterBackend::WriterInfo* i)	{ type = WRITER_INFO; arg.winfo = i; }
+	explicit HookArgument(const logging::BaseWriterBackend::WriterInfo* i)	{ type = WRITER_INFO; arg.winfo = i; }
 
 	/**
 	 * Constructor with a threading field argument.
@@ -323,7 +323,7 @@ public:
 	 * Returns the value for a logging WriterInfo argument.  The argument's type must
 	 * match accordingly.
 	 */
-	const logging::WriterBackend::WriterInfo* AsWriterInfo() const { assert(type == WRITER_INFO); return arg.winfo; }
+	const logging::BaseWriterBackend::WriterInfo* AsWriterInfo() const { assert(type == WRITER_INFO); return arg.winfo; }
 
 	/**
 	 * Returns the value for a threading fields argument.  The argument's type must
@@ -368,7 +368,7 @@ private:
 		const Val* val;
 		const val_list* vals;
 		const void* voidp;
-		const logging::WriterBackend::WriterInfo* winfo;
+		const logging::BaseWriterBackend::WriterInfo* winfo;
 		const Location* loc;
 	} arg;
 
@@ -745,7 +745,7 @@ protected:
 	 *               will be located in different thread, typically
 	 *               in manager or logger node).
 	 *
-	 * @param info WriterBackend::WriterInfo with information about the writer.
+	 * @param info BaseWriterBackend::WriterInfo with information about the writer.
 	 *
 	 * @param num_fields number of fields in the record being written.
 	 *
@@ -754,7 +754,7 @@ protected:
 	virtual void HookLogInit(const std::string& writer,
 	                         const std::string& instantiating_filter,
 	                         bool local, bool remote,
-	                         const logging::WriterBackend::WriterInfo& info,
+	                         const logging::BaseWriterBackend::WriterInfo& info,
 	                         int num_fields,
 	                         const threading::Field* const* fields);
 
@@ -772,7 +772,7 @@ protected:
 	 *
 	 * @param filter Name of the filter being written to.
 	 *
-	 * @param info WriterBackend::WriterInfo with information about the writer.
+	 * @param info BaseWriterBackend::WriterInfo with information about the writer.
 	 *
 	 * @param num_fields number of fields in the record being written.
 	 *
@@ -786,7 +786,7 @@ protected:
 	 */
 	virtual bool HookLogWrite(const std::string& writer,
 	                          const std::string& filter,
-	                          const logging::WriterBackend::WriterInfo& info,
+	                          const logging::BaseWriterBackend::WriterInfo& info,
 	                          int num_fields,
 	                          const threading::Field* const* fields,
 	                          threading::Value** vals);

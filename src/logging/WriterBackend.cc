@@ -9,6 +9,7 @@
 #include "WriterBackend.h"
 #include "WriterFrontend.h"
 
+#if OLD
 // Messages sent from backend to frontend (i.e., "OutputMessages").
 
 using threading::Value;
@@ -327,3 +328,13 @@ bool WriterBackend::OnHeartbeat(double network_time, double current_time)
 	SendOut(new FlushWriteBufferMessage(frontend));
 	return DoHeartbeat(network_time, current_time);
 	}
+
+#else // OLD
+
+logging::WriterBackend::WriterBackend(WriterFrontend* arg_frontend) : BaseWriterBackend(arg_frontend)
+{
+}
+
+
+#endif // OLD
+

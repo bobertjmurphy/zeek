@@ -394,13 +394,13 @@ void Plugin::HookBroObjDtor(void* obj)
 void Plugin::HookLogInit(const std::string& writer,
                          const std::string& instantiating_filter,
                          bool local, bool remote,
-                         const logging::WriterBackend::WriterInfo& info,
+                         const logging::BaseWriterBackend::WriterInfo& info,
                          int num_fields, const threading::Field* const* fields)
 	{
 	}
 
 bool Plugin::HookLogWrite(const std::string& writer, const std::string& filter,
-                          const logging::WriterBackend::WriterInfo& info,
+                          const logging::BaseWriterBackend::WriterInfo& info,
                           int num_fields, const threading::Field* const* fields,
                           threading::Value** vals)
 	{

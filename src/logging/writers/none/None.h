@@ -13,7 +13,7 @@ public:
 	explicit None(WriterFrontend* frontend) : WriterBackend(frontend)	{}
 	~None() override {};
 
-	static WriterBackend* Instantiate(WriterFrontend* frontend)
+	static BaseWriterBackend* Instantiate(WriterFrontend* frontend)
 		{ return new None(frontend); }
 
 protected:

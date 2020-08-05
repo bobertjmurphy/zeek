@@ -19,7 +19,7 @@ public:
 
 	static string LogExt();
 
-	static WriterBackend* Instantiate(WriterFrontend* frontend)
+	static BaseWriterBackend* Instantiate(WriterFrontend* frontend)
 		{ return new Ascii(frontend); }
 
 protected:

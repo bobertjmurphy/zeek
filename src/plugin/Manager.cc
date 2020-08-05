@@ -783,7 +783,7 @@ void Manager::HookBroObjDtor(void* obj) const
 void Manager::HookLogInit(const std::string& writer,
                           const std::string& instantiating_filter,
                           bool local, bool remote,
-                          const logging::WriterBackend::WriterInfo& info,
+                          const logging::BaseWriterBackend::WriterInfo& info,
                           int num_fields,
                           const threading::Field* const* fields) const
 	{
@@ -817,7 +817,7 @@ void Manager::HookLogInit(const std::string& writer,
 
 bool Manager::HookLogWrite(const std::string& writer,
                            const std::string& filter,
-                           const logging::WriterBackend::WriterInfo& info,
+                           const logging::BaseWriterBackend::WriterInfo& info,
                            int num_fields,
                            const threading::Field* const* fields,
                            threading::Value** vals) const

@@ -19,7 +19,7 @@
 
 #include "NetVar.h"
 #include "iosource/IOSource.h"
-#include "logging/WriterBackend.h"
+#include "logging/BaseWriterBackend.h"
 
 class Frame;
 
@@ -178,7 +178,7 @@ public:
 	 * @return true if the message is sent successfully.
 	 */
 	bool PublishLogCreate(EnumVal* stream, EnumVal* writer,
-	                      const logging::WriterBackend::WriterInfo& info,
+	                      const logging::BaseWriterBackend::WriterInfo& info,
 	                      int num_fields,
 	                      const threading::Field* const * fields,
 	                      const broker::endpoint_info& peer = NoPeer);
