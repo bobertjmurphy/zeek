@@ -13,6 +13,8 @@ add_subdirectory(writers)
 set(logging_SRCS
     Component.cc
     Manager.cc
+    BaseWriterBackend.cc
+    BatchWriterBackend.cc
     WriterBackend.cc
     WriterFrontend.cc
     Tag.cc
