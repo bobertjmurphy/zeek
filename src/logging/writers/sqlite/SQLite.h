@@ -18,7 +18,7 @@ public:
 	explicit SQLite(WriterFrontend* frontend);
 	~SQLite() override;
 
-	static BaseWriterBackend* Instantiate(WriterFrontend* frontend)
+	static WriterBackend* Instantiate(WriterFrontend* frontend)
 		{ return new SQLite(frontend); }
 
 protected:

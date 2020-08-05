@@ -9,7 +9,7 @@
 namespace logging {
 
 class WriterFrontend;
-class BaseWriterBackend;
+class WriterBackend;
 
 /**
  * Component description for plugins providing log writers.
@@ -17,7 +17,7 @@ class BaseWriterBackend;
 class Component : public plugin::Component,
 		  public plugin::TaggedComponent<logging::Tag> {
 public:
-	typedef BaseWriterBackend* (*factory_callback)(WriterFrontend* frontend);
+	typedef WriterBackend* (*factory_callback)(WriterFrontend* frontend);
 
 	/**
 	 * Constructor.

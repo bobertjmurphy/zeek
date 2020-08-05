@@ -19,6 +19,7 @@
 #include "Desc.h"
 #include "WriterFrontend.h"
 #include "BaseWriterBackend.h"
+#include "WriterBackend.h"
 #include "logging.bif.h"
 #include "plugin/Plugin.h"
 #include "plugin/Manager.h"
@@ -149,7 +150,7 @@ BaseWriterBackend* Manager::CreateBackend(WriterFrontend* frontend, EnumVal* tag
 		return 0;
 		}
 
-	BaseWriterBackend* backend = (*c->Factory())(frontend);
+	BaseWriterBackend* backend = dynamic_cast<BaseWriterBackend*>((*c->Factory())(frontend));
 	assert(backend);
 
 	return backend;

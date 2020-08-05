@@ -6,10 +6,6 @@
 
 #include "BaseWriterBackend.h"
 
-#include "threading/MsgThread.h"
-
-#include "Component.h"
-
 namespace broker { class data; }
 
 namespace logging  {
