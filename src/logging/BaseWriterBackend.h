@@ -268,21 +268,6 @@ protected:
     virtual bool DoInit(const WriterInfo& info, int num_fields,
                 const threading::Field* const*  fields) = 0;
 
-#if OLD
-    /**
-     * Writer-specific output method implementing recording of fone log
-     * entry.
-     *
-     * A writer implementation must override this method. If it returns
-     * false, it will be assumed that a fatal error has occured that
-     * prevents the writer from further operation; it will then be
-     * disabled and eventually deleted. When returning false, an
-     * implementation should also call Error() to indicate what happened.
-     */
-    virtual bool DoWrite(int num_fields, const threading::Field* const*  fields,
-                 threading::Value** vals) = 0;
-#endif // OLD
-
     /**
      * Writer-specific method implementing a change of fthe buffering
      * state.  If buffering is disabled, the writer should attempt to
