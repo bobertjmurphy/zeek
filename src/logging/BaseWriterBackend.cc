@@ -197,6 +197,7 @@ bool BaseWriterBackend::Init(int arg_num_fields, const Field* const* arg_fields)
 
 bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
     {
+#if OLD
     // Double-check that the arguments match. If we get this from remote,
     // something might be mixed up.
     if ( num_fields != arg_num_fields )
@@ -251,6 +252,116 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
         DisableFrontend();
 
     return success;
+#else // OLD
+    assert(num_writes >= 0);
+
+        // Double-check that the arguments match. If we get this from remote,
+        // something might be mixed up.
+        if ( num_fields != arg_num_fields )
+            {
+
+    #ifdef DEBUG
+            const char* msg = Fmt("Number of fields don't match in WriterBackend::Write() (%d vs. %d)",
+                          arg_num_fields, num_fields);
+            Debug(DBG_LOGGING, msg);
+    #endif
+
+            DeleteVals(num_writes, vals);
+            DisableFrontend();
+            return false;
+            }
+
+        // Double-check all the types match.
+        for ( int j = 0; j < num_writes; j++ )
+            {
+            for ( int i = 0; i < num_fields; ++i )
+                {
+                if ( vals[j][i]->type != fields[i]->type )
+                    {
+    #ifdef DEBUG
+                    const char* msg = Fmt("Field #%d type doesn't match in WriterBackend::Write() (%d vs. %d)",
+                                  i, vals[j][i]->type, fields[i]->type);
+                    Debug(DBG_LOGGING, msg);
+    #endif
+                    DisableFrontend();
+                    DeleteVals(num_writes, vals);
+                    return false;
+                    }
+                }
+            }
+
+        bool success = true;
+
+#if OLD
+        if ( ! Failed() )
+            {
+
+            // If the durable queue isn't active, write as many items directly as possible
+            int items_directly_written = 0;
+            bool can_write_directly = !durable_queue_ptr->Active();
+            if (can_write_directly)
+                {
+                    items_directly_written = DoWriteLogs(num_fields, num_writes, fields, vals);
+                }
+
+            // If anything remains that wasn't directly written, cache it, but avoid overflowing
+            if (items_directly_written < num_writes)
+                {
+                size_t records_to_add = num_writes - items_directly_written;
+
+                // If this would make the queue contain too many records, delete records from the front
+                if (this->m_max_records > 0)
+                    {
+                    size_t current_record_count = durable_queue_ptr->size();
+                    size_t projected_record_count = current_record_count + records_to_add;
+                    if (projected_record_count > this->m_max_records)
+                        {
+                        size_t records_to_delete = projected_record_count - this->m_max_records;
+                        durable_queue_ptr->pop_front(records_to_delete);
+                        }
+                    }
+
+                // Add records to the cache
+                std::vector<const threading::Field *> field_vector;
+                for ( int i = 0; i < num_fields; ++i )
+                    field_vector.push_back(fields[i]);
+                success = durable_queue_ptr->push_back(field_vector, records_to_add, vals + items_directly_written);
+                DBG_LOG(DBG_LOGGING, "\t%s\tWRITE:     %d records added to durable queue, %zu records now in queue\n", this->Name(),
+                        num_writes-items_directly_written, durable_queue_ptr->size());
+
+
+                // If the queue now contains too much data, delete records from the front. This
+                // will repeatedly delete if it mis-estimates how many records to delete.
+                if (this->m_max_bytes > 0)
+                    {
+                    size_t current_space_used = durable_queue_ptr->space_used();
+                    while (current_space_used > this->m_max_bytes)
+                        {
+                        // Figure out how many records to delete
+                        size_t bytes_to_delete = current_space_used - this->m_max_bytes;
+                        size_t current_record_count = durable_queue_ptr->size();
+                        double avg_bytes_per_record = (double)current_space_used / (double)current_record_count;
+                        size_t records_to_delete = llround(bytes_to_delete / avg_bytes_per_record);
+
+                        // Delete them
+                        durable_queue_ptr->pop_front(records_to_delete);
+
+                        // Prepare for the next iteration
+                        current_space_used = durable_queue_ptr->space_used();
+                        }
+                    }
+                }
+            }
+#endif // OLD
+
+        DeleteVals(num_writes, vals);
+
+        if ( ! success )
+            DisableFrontend();
+
+        // This should always be true, unless writing to the durable queue fails
+        return success;
+#endif // OLD
     }
 
 bool BaseWriterBackend::SetBuf(bool enabled)

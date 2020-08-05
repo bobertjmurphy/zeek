@@ -133,19 +133,20 @@ public:
     bool Init(int num_fields, const threading::Field* const* fields);
 
     /**
-     * Writes one log entry.
+     * Writes one or more log entries.
      *
      * @param num_fields: The number of log fields for this stream. The
      * value must match what was passed to Init().
      *
-     * @param An array of size \a num_fields with the log values. Their
-     * types musst match with the field passed to Init(). The method
+     * @param num_writes: The number of log records to be written.
+     *
+     * @param vals: An array of size  \a num_writes * \a num_fields
+     * with the log values. The types of each group of \a num_fields
+     * values must match with the fields passed to Init(). The method
      * takes ownership of \a vals..
      *
-     * Returns false if an error occured, in which case the writer must
-     * not be used any further.
-     *
-     * @return False if an error occured.
+     * @return True if the writer should continue. False if a fatal error
+     * occurred, in which case the writer must not be used any further.
      */
     bool Write(int num_fields, int num_writes, threading::Value*** vals);
 
@@ -267,6 +268,7 @@ protected:
     virtual bool DoInit(const WriterInfo& info, int num_fields,
                 const threading::Field* const*  fields) = 0;
 
+#if OLD
     /**
      * Writer-specific output method implementing recording of fone log
      * entry.
@@ -279,6 +281,7 @@ protected:
      */
     virtual bool DoWrite(int num_fields, const threading::Field* const*  fields,
                  threading::Value** vals) = 0;
+#endif // OLD
 
     /**
      * Writer-specific method implementing a change of fthe buffering
@@ -368,6 +371,30 @@ protected:
      * nothing.
      */
     virtual bool DoHeartbeat(double network_time, double current_time) = 0;
+    
+protected:
+
+    /**
+     * Perform a "low-level" write request that actually tries to write one or
+     * more log records to the target.
+     * 
+     * It must be implemented, and only implemented, by direct
+     * child classes of BaseWriterBackend, and its implementation is at the
+     * heart of the difference between a batching and non-batching writer.
+     *
+     * @param num_writes: The number of log records to be written with
+     * this call.
+     *
+     * @param vals: An array of size \a num_fields *  \a num_writes with the
+     * log values. Within each group of \a num_fields values, their types
+     * must match with the field passed to Init(). The method takes ownership
+     * of \a vals.
+     *
+     * @return The number of log records written. If this is not the same
+     * as num_writes, an implementation should also call Error() to
+     * indicate what happened.
+     */
+    virtual int WriteLogs(int num_writes, threading::Value*** vals) = 0;
 
 private:
     /**

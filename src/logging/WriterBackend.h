@@ -416,6 +416,39 @@ public:
      *
      */
     explicit WriterBackend(WriterFrontend* frontend);
+
+        
+    protected:
+    
+    /**
+     * Writer-specific output method implementing recording of one log
+     * entry.
+     *
+     * A non-batching writer implementation must override this method. If it
+     * returns false, Zeek will assume that a fatal error has occured that
+     * prevents the writer from further operation; the writer will then be
+     * disabled and eventually deleted. When returning false, an
+     * implementation should also call Error() to indicate what happened.
+     */
+    virtual bool DoWrite(int num_fields, const threading::Field* const*  fields,
+                 threading::Value** vals) = 0;
+
+    /**
+     * This class's non-batching implementation of WriteLogs
+     *
+     * @param num_writes: The number of log records to be written with
+     * this call.
+     *
+     * @param vals: An array of size \a num_fields *  \a num_writes with the
+     * log values. Within each group of \a num_fields values, their types
+     * must match with the field passed to Init(). The method takes ownership
+     * of \a vals.
+     *
+     * @return The number of log records written. If this is not the same
+     * as num_writes, an implementation should also call Error() to
+     * indicate what happened.
+     */
+    virtual int WriteLogs(int num_writes, threading::Value*** vals) override final;
 };
 
 #endif // OLD
