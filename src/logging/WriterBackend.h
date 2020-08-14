@@ -6,16 +6,14 @@
 
 #include "BaseWriterBackend.h"
 
-namespace broker { class data; }
-
 namespace logging  {
 
 class WriterFrontend;
 
 
 /**
- * Base class for writer implementation. When the logging::Manager creates a
- * new logging filter, it instantiates a WriterFrontend. That then in turn
+ * Base class for non-batch writer implementation. When the logging::Manager creates
+ * a new logging filter, it instantiates a WriterFrontend. That then in turn
  * creates a WriterBackend of the right type. The frontend then forwards
  * messages over the backend as its methods are called.
  *
@@ -45,11 +43,15 @@ public:
      * Writer-specific output method implementing recording of one log
      * entry.
      *
-     * A non-batching writer implementation must override this method. If it
-     * returns false, Zeek will assume that a fatal error has occured that
-     * prevents the writer from further operation; the writer will then be
-     * disabled and eventually deleted. When returning false, an
-     * implementation should also call Error() to indicate what happened.
+     * A non-batching writer implementation must override this method.
+     * 
+     * Unlike previous Zeek versions, if this returns false, Zeek will NOT always
+     * assume that a fatal error has occured, and WON'T always disable and delete
+     * the log writer.
+     * 
+     * Instead, if this returns false, the log writer will report that via the stats
+     * system, and keep running. Zeek components plug-ins may monitor those reports,
+     * and shut down the writer based on their own criteria.
      */
     virtual bool DoWrite(int num_fields, const threading::Field* const*  fields,
                  threading::Value** vals) = 0;
