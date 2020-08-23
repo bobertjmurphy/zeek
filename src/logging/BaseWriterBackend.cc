@@ -234,7 +234,8 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
             }
         }
 
-    bool success = true;
+    int logs_without_fatal_errors = this->WriteLogs(num_writes, vals);
+    bool success = (logs_without_fatal_errors == num_writes);
 
     DeleteVals(num_writes, vals);
 
