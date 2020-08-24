@@ -235,6 +235,10 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
         }
 
     bool success = this->WriteLogs(num_writes, vals);
+    
+    // Don't call DeleteVals() here - BaseWriterBackend caches vals, and
+    // accesses it after this function returns, so deleting vals here will
+    // cause a dangling reference.
 
     if ( ! success )
         DisableFrontend();
@@ -315,5 +319,11 @@ bool BaseWriterBackend::OnHeartbeat(double network_time, double current_time)
         return true;
 
     SendOut(new FlushWriteBufferMessage(frontend));
+	this->SendStats();
     return DoHeartbeat(network_time, current_time);
     }
+
+void BaseWriterBackend::SendStats() const
+	{
+	/// \todo Send something here
+	}

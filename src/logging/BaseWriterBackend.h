@@ -387,6 +387,11 @@ protected:
      */
     void DeleteVals(int num_writes, threading::Value*** vals);
 
+	/**
+	 * Sends statistics wherever they need to go.
+	 */
+	virtual void SendStats() const;
+
 private:
 
     // Frontend that instantiated us. This object must not be access from
