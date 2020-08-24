@@ -375,18 +375,19 @@ protected:
      * must match with the field passed to Init(). The method takes ownership
      * of \a vals.
      *
-     * @return The number of log records that didn't have fatal errors. If this
-     * is not the same as num_writes, an implementation should also call
-     * Error() to indicate what happened, and the writer and its thread
-     * will eventually be terminated.
+     * @return true on no fatal errors, false on a fatal error. If there
+     * were any fatal errors, an implementation should also call Error() to
+     * indicate what happened, and the writer and its thread will eventually
+     * be terminated.
      */
-    virtual int WriteLogs(int num_writes, threading::Value*** vals) = 0;
+    virtual bool WriteLogs(int num_writes, threading::Value*** vals) = 0;
 
-private:
     /**
      * Deletes the values as passed into Write().
      */
     void DeleteVals(int num_writes, threading::Value*** vals);
+
+private:
 
     // Frontend that instantiated us. This object must not be access from
     // this class, it's running in a different thread!

@@ -67,12 +67,12 @@ public:
      * must match with the field passed to Init(). The method takes ownership
      * of \a vals.
      *
-     * @return The number of log records that didn't have fatal errors. If this
-     * is not the same as num_writes, an implementation should also call
-     * Error() to indicate what happened, and the writer and its thread
-     * will eventually be terminated.
+     * @return true on no fatal errors, false on a fatal error. If there
+     * were any fatal errors, an implementation should also call Error() to
+     * indicate what happened, and the writer and its thread will eventually
+     * be terminated.
      */
-    virtual int WriteLogs(int num_writes, threading::Value*** vals) override final;
+    virtual bool WriteLogs(int num_writes, threading::Value*** vals) override final;
 };
 
 
