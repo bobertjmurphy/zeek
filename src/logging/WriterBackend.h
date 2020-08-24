@@ -8,8 +8,6 @@
 
 namespace logging  {
 
-class WriterFrontend;
-
 
 /**
  * Base class for non-batch writer implementation. When the logging::Manager creates
