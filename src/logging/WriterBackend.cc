@@ -42,3 +42,12 @@ bool logging::WriterBackend::WriteLogs(int num_writes, threading::Value*** vals)
     return no_fatal_errors;
 }
 
+bool logging::WriterBackend::RunHeartbeat(double network_time, double current_time)
+{
+	return true;
+}
+
+void logging::WriterBackend::SendStats() const
+	{
+	/// \todo Fill me in
+	}

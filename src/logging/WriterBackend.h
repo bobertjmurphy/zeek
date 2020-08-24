@@ -73,6 +73,13 @@ public:
      * be terminated.
      */
     virtual bool WriteLogs(int num_writes, threading::Value*** vals) override final;
+    
+    virtual bool RunHeartbeat(double network_time, double current_time) override final;
+    
+	/**
+	 * Sends statistics wherever they need to go.
+	 */
+	virtual void SendStats() const override;
 };
 
 

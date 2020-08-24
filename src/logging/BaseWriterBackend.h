@@ -245,9 +245,32 @@ public:
      */
     bool FinishedRotation();
 
-    // Overridden from MsgThread.
-    bool OnHeartbeat(double network_time, double current_time) override;
-    bool OnFinish(double network_time) override;
+    // Overridden from MsgThread - these call Heartbeat() and DoFinish()
+    // in the subclasses
+	bool OnHeartbeat(double network_time, double current_time) override final;
+    bool OnFinish(double network_time) override final;
+
+	/**
+	 * Gets a configuration string, using this order of precedence in case
+	 * of overrides:
+	 *  1. Value for a reader-writer combination, set in a bro script
+	 *  2. Value for a reader independent of the writer, set in a bro script
+	 *     May also be a global config value
+	 *  3. Default value from the code
+	 */
+	std::string GetConfigString(const std::string& key) const;
+
+	/**
+	 * Gets a recognizable name for the frontend. For example, for
+	 * packet_filter/Log::WRITER_ASCII, that would be "packet_filter".
+	 */
+	std::string GetFrontendName() const;
+
+	/**
+	 * Gets a recognizable name for the backend. For example, for
+	 * packet_filter/Log::WRITER_ASCII, that would be "ascii".
+	 */
+	std::string GetBackendName() const;
 
     // Let the compiler know that we are aware that there is a virtual
     // info function in the base.
@@ -392,6 +415,12 @@ protected:
 	 */
 	virtual void SendStats() const;
 
+	// This is updated by the batching and non-batching writer backend
+	// subclasses
+	size_t items_successfully_written = 0;
+	
+	virtual bool RunHeartbeat(double network_time, double current_time)  = 0;
+
 private:
 
     // Frontend that instantiated us. This object must not be access from
@@ -404,6 +433,8 @@ private:
     bool buffering;    // True if buffering is enabled.
 
     int rotation_counter; // Tracks FinishedRotation() calls.
+    
+	std::string m_backend_name;
 };
 
 

@@ -128,6 +128,19 @@ BaseWriterBackend::BaseWriterBackend(WriterFrontend* arg_frontend) : MsgThread()
     rotation_counter = 0;
 
     SetName(frontend->Name());
+
+	// Determine the backend name
+	std::string back_end_description = frontend->Name();
+	for (char &c : back_end_description)
+		c = std::tolower(c);
+	const std::string match_string = "log::writer_";
+	size_t match_loc = back_end_description.rfind(match_string);
+	if (match_loc != std::string::npos)
+		{
+		size_t loc = match_loc + match_string.length();
+		back_end_description = back_end_description.substr(loc);
+		}
+	m_backend_name = back_end_description;
     }
 
 BaseWriterBackend::~BaseWriterBackend()
@@ -205,7 +218,7 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
         {
 
 #ifdef DEBUG
-        const char* msg = Fmt("Number of fields don't match in WriterBackend::Write() (%d vs. %d)",
+		const char* msg = Fmt("Number of fields don't match in BaseWriterBackend::Write() (%d vs. %d)",
                       arg_num_fields, num_fields);
         Debug(DBG_LOGGING, msg);
 #endif
@@ -223,7 +236,7 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
             if ( vals[j][i]->type != fields[i]->type )
                 {
 #ifdef DEBUG
-                const char* msg = Fmt("Field #%d type doesn't match in WriterBackend::Write() (%d vs. %d)",
+				const char* msg = Fmt("Field #%d type doesn't match in BaseWriterBackend::Write() (%d vs. %d)",
                               i, vals[j][i]->type, fields[i]->type);
                 Debug(DBG_LOGGING, msg);
 #endif
@@ -243,7 +256,6 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
     if ( ! success )
         DisableFrontend();
 
-    // This should always be true, unless writing to the durable queue fails
     return success;
     }
 
@@ -310,7 +322,7 @@ bool BaseWriterBackend::OnFinish(double network_time)
     if ( Failed() )
         return true;
 
-    return DoFinish(network_time);
+    return DoFinish(network_time);		// Implemented by the writers
     }
 
 bool BaseWriterBackend::OnHeartbeat(double network_time, double current_time)
@@ -319,10 +331,56 @@ bool BaseWriterBackend::OnHeartbeat(double network_time, double current_time)
         return true;
 
     SendOut(new FlushWriteBufferMessage(frontend));
-	this->SendStats();
-    return DoHeartbeat(network_time, current_time);
-    }
 
+	this->SendStats();
+	bool result = this->RunHeartbeat(network_time, current_time);
+	return result;
+    }
+    
+std::string BaseWriterBackend::GetConfigString(const std::string& key) const
+	{
+	// Get the default value
+	const static BaseWriterBackend::WriterInfo::config_map s_default_config =
+		{
+			/// \todo Fill me in
+			{   "dq:storage_type",                 "sqlite disk"    },  // SQLite on disk
+			{   "dq:disk_storage_directory",       "/tmp"           },  // The /tmp directory
+			{   "dq:max_records",                  "0"              },  // Unlimited
+			{   "dq:max_bytes",                    "0"              },  // Unlimited
+		};
+	BaseWriterBackend::WriterInfo::config_map::const_iterator itr = s_default_config.find(key.c_str());
+	assert(itr != s_default_config.end());
+	std::string result = itr->second;
+
+	// If present in the config, use that value. If this exists, it can be inited as a global
+	// config value in a bro script, and overridden in a bro script for the frontend.
+	itr = info->config.find(key.c_str());
+	if (itr != info->config.end())
+		result = itr->second;
+
+
+	// If present, override with a bro script writer/frontend combination value. For example,
+	// to override "foo" for the ASCII writer, use "ascii:foo"
+	std::string override_key = this->GetBackendName() + ":" + key;
+	itr = info->config.find(override_key.c_str());
+	if (itr != info->config.end())
+		result = itr->second;
+
+
+	return result;
+	}
+
+std::string BaseWriterBackend::GetFrontendName() const
+	{
+	return info->path;
+	}
+
+std::string BaseWriterBackend::GetBackendName() const
+	{
+	std::string result = this->m_backend_name;
+	return result;
+	}
+	
 void BaseWriterBackend::SendStats() const
 	{
 	/// \todo Send something here
