@@ -245,9 +245,32 @@ public:
      */
     bool FinishedRotation();
 
-    // Overridden from MsgThread.
-    bool OnHeartbeat(double network_time, double current_time) override;
-    bool OnFinish(double network_time) override;
+    // Overridden from MsgThread - these call Heartbeat() and DoFinish()
+    // in the subclasses
+	bool OnHeartbeat(double network_time, double current_time) override final;
+    bool OnFinish(double network_time) override final;
+
+	/**
+	 * Gets a configuration string, using this order of precedence in case
+	 * of overrides:
+	 *  1. Value for a reader-writer combination, set in a bro script
+	 *  2. Value for a reader independent of the writer, set in a bro script
+	 *     May also be a global config value
+	 *  3. Default value from the code
+	 */
+	std::string GetConfigString(const std::string& key) const;
+
+	/**
+	 * Gets a recognizable name for the frontend. For example, for
+	 * packet_filter/Log::WRITER_ASCII, that would be "packet_filter".
+	 */
+	std::string GetFrontendName() const;
+
+	/**
+	 * Gets a recognizable name for the backend. For example, for
+	 * packet_filter/Log::WRITER_ASCII, that would be "ascii".
+	 */
+	std::string GetBackendName() const;
 
     // Let the compiler know that we are aware that there is a virtual
     // info function in the base.
@@ -375,18 +398,30 @@ protected:
      * must match with the field passed to Init(). The method takes ownership
      * of \a vals.
      *
-     * @return The number of log records that didn't have fatal errors. If this
-     * is not the same as num_writes, an implementation should also call
-     * Error() to indicate what happened, and the writer and its thread
-     * will eventually be terminated.
+     * @return true on no fatal errors, false on a fatal error. If there
+     * were any fatal errors, an implementation should also call Error() to
+     * indicate what happened, and the writer and its thread will eventually
+     * be terminated.
      */
-    virtual int WriteLogs(int num_writes, threading::Value*** vals) = 0;
+    virtual bool WriteLogs(int num_writes, threading::Value*** vals) = 0;
 
-private:
     /**
      * Deletes the values as passed into Write().
      */
     void DeleteVals(int num_writes, threading::Value*** vals);
+
+	/**
+	 * Sends statistics wherever they need to go.
+	 */
+	virtual void SendStats() const;
+	
+	// This is updated by the batching and non-batching writer backend
+	// subclasses
+	size_t items_successfully_written = 0;
+	
+	virtual bool RunHeartbeat(double network_time, double current_time)  = 0;
+
+private:
 
     // Frontend that instantiated us. This object must not be access from
     // this class, it's running in a different thread!
@@ -398,6 +433,8 @@ private:
     bool buffering;    // True if buffering is enabled.
 
     int rotation_counter; // Tracks FinishedRotation() calls.
+    
+	std::string m_backend_name;
 };
 
 
