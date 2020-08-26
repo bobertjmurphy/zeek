@@ -343,10 +343,6 @@ std::string BaseWriterBackend::GetConfigString(const std::string& key) const
 	const static BaseWriterBackend::WriterInfo::config_map s_default_config =
 		{
 			/// \todo Fill me in
-			{   "dq:storage_type",                 "sqlite disk"    },  // SQLite on disk
-			{   "dq:disk_storage_directory",       "/tmp"           },  // The /tmp directory
-			{   "dq:max_records",                  "0"              },  // Unlimited
-			{   "dq:max_bytes",                    "0"              },  // Unlimited
 		};
 	BaseWriterBackend::WriterInfo::config_map::const_iterator itr = s_default_config.find(key.c_str());
 	assert(itr != s_default_config.end());
@@ -379,7 +375,7 @@ std::string BaseWriterBackend::GetBackendName() const
 	{
 	std::string result = this->m_backend_name;
 	return result;
-	}
+    }
 	
 void BaseWriterBackend::SendStats() const
 	{
