@@ -248,7 +248,7 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
         }
 
     bool success = this->WriteLogs(num_writes, vals);
-
+    
     // Don't call DeleteVals() here - BaseWriterBackend caches vals, and
     // accesses it after this function returns, so deleting vals here will
     // cause a dangling reference.

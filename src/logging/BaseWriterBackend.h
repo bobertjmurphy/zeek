@@ -414,7 +414,7 @@ protected:
 	 * Sends statistics wherever they need to go.
 	 */
 	virtual void SendStats() const;
-	
+
 	// This is updated by the batching and non-batching writer backend
 	// subclasses
 	size_t items_successfully_written = 0;
