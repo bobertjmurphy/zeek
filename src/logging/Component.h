@@ -9,7 +9,9 @@
 namespace logging {
 
 class WriterFrontend;
+class BaseWriterBackend;
 class WriterBackend;
+class BatchWriterBackend;
 
 /**
  * Component description for plugins providing log writers.
@@ -17,7 +19,9 @@ class WriterBackend;
 class Component : public plugin::Component,
 		  public plugin::TaggedComponent<logging::Tag> {
 public:
+	typedef BaseWriterBackend* (*base_factory_callback)(WriterFrontend* frontend);
 	typedef WriterBackend* (*factory_callback)(WriterFrontend* frontend);
+	typedef BatchWriterBackend* (*batch_factory_callback)(WriterFrontend* frontend);
 
 	/**
 	 * Constructor.
@@ -31,7 +35,9 @@ public:
 	 * method inside the class that just allocates and returns a new
 	 * instance.
 	 */
+	Component(const std::string& name, base_factory_callback factory);
 	Component(const std::string& name, factory_callback factory);
+	Component(const std::string& name, batch_factory_callback factory);
 
 	/**
 	 * Destructor.
@@ -48,7 +54,7 @@ public:
 	/**
 	 * Returns the writer's factory function.
 	 */
-	factory_callback Factory() const	{ return factory; }
+	base_factory_callback Factory() const	{ return factory; }
 
 protected:
 	/**
@@ -57,7 +63,7 @@ protected:
 	void DoDescribe(ODesc* d) const override;
 
 private:
-	factory_callback factory;
+	base_factory_callback factory;
 };
 
 }

@@ -19,7 +19,6 @@
 #include "Desc.h"
 #include "WriterFrontend.h"
 #include "BaseWriterBackend.h"
-#include "WriterBackend.h"
 #include "logging.bif.h"
 #include "plugin/Plugin.h"
 #include "plugin/Manager.h"
