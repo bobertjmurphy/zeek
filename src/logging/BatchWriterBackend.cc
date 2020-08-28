@@ -8,21 +8,23 @@ logging::BatchWriterBackend::BatchWriterBackend(WriterFrontend* arg_frontend) : 
 
 bool logging::BatchWriterBackend::WriteLogs(int num_writes, threading::Value*** vals)
 {
-#if BOBERT
-    // Exit early if nothing is to be written
-    if (num_writes == 0) {
-        return true;        // No fatal errors
+    // Attempt the write
+    WriteErrorInfoVector errors = this->DoWrite(num_writes, vals);
+    
+    // Handle any problems, and recognize any fatal errors
+    size_t fatal_error_count = 0;
+    for (const WriteErrorInfo& this_error : errors) {
+        /// \todo Use first_record_index, description, and description to report problems
+        
+        // Keep track of fatal errors
+        bool this_error_is_fatal = this_error.is_fatal;
+        if (this_error_is_fatal) {
+            fatal_error_count += 1;
+        }
     }
-
-    int num_fields = this->NumFields();
-    const threading::Field* const *fields = this->Fields();
-    int num_written = this->DoWriteLogs(num_fields, num_writes,
-                                        fields, vals);
-    bool no_fatal_errors = (num_writes == num_written);
+    
+    bool no_fatal_errors = (fatal_error_count == 0);
     return no_fatal_errors;
-#else
-    return true;
-#endif
 }
 
 bool logging::BatchWriterBackend::RunHeartbeat(double network_time, double current_time)
