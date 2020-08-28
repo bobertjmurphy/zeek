@@ -117,7 +117,7 @@ protected:
      * indicate what happened, and the writer and its thread will eventually
      * be terminated.
      */
-    virtual bool WriteLogs(int num_writes, threading::Value*** vals) override final;
+    virtual bool WriteLogs(size_t num_writes, threading::Value*** vals) override final;
     
     virtual bool RunHeartbeat(double network_time, double current_time) override final;
     
@@ -125,6 +125,30 @@ protected:
      * Sends statistics wherever they need to go.
      */
     virtual void SendStats() const override;
+    
+private:
+    /**
+     * Output method that implements recording zero or more log entries, and
+     * reports any errors to the rest of the system.
+     *
+     * This is a "low-level" write request that actually tries to write to
+     * the target.
+     *
+     * @param num_writes: The number of log records to be written with
+     * this call.
+     *
+     * @param vals: An array of size \a num_fields *  \a num_writes with the
+     * log values. Within each group of \a num_fields values, their types
+     * must match with the field passed to Init(). The method takes ownership
+     * of \a vals.
+     *
+     * @return The number of log records written. If this is not the same
+     * as num_writes, an implementation should also call Error() to
+     * indicate what happened. Returning a value less than num_writes does
+     * not automatically cause the writer to shut down.
+     */
+    size_t DoWriteLogs(size_t num_writes, threading::Value*** vals);
+
 };
 
 

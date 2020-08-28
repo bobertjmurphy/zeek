@@ -15,7 +15,7 @@ logging::WriterBackend::WriterBackend(WriterFrontend* arg_frontend) : BaseWriter
 }
 
 
-bool logging::WriterBackend::WriteLogs(int num_writes, threading::Value*** vals)
+bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
 {
     // Exit early if nothing is to be written
     if (num_writes == 0) {

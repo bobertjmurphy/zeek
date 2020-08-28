@@ -6,7 +6,7 @@ logging::BatchWriterBackend::BatchWriterBackend(WriterFrontend* arg_frontend) : 
 {
 }
 
-bool logging::BatchWriterBackend::WriteLogs(int num_writes, threading::Value*** vals)
+bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
 {
     // Attempt the write
     WriteErrorInfoVector errors = this->DoWrite(num_writes, vals);
@@ -25,6 +25,11 @@ bool logging::BatchWriterBackend::WriteLogs(int num_writes, threading::Value*** 
     
     bool no_fatal_errors = (fatal_error_count == 0);
     return no_fatal_errors;
+}
+
+size_t logging::BatchWriterBackend::DoWriteLogs(size_t num_writes, threading::Value*** vals)
+{
+    
 }
 
 bool logging::BatchWriterBackend::RunHeartbeat(double network_time, double current_time)

@@ -403,7 +403,7 @@ protected:
      * indicate what happened, and the writer and its thread will eventually
      * be terminated.
      */
-    virtual bool WriteLogs(int num_writes, threading::Value*** vals) = 0;
+    virtual bool WriteLogs(size_t num_writes, threading::Value*** vals) = 0;
 
     /**
      * Deletes the values as passed into Write().
