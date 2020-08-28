@@ -39,7 +39,7 @@ public:
     explicit BatchWriterBackend(WriterFrontend* frontend);
 
         
-    protected:
+protected:
     
     /**
      * Batch writers use this struct to report a problem that prevented sending a contiguous range
@@ -73,7 +73,7 @@ public:
         
         /**
          * If this is false, the writer should continue running. If this is true, the writer
-         * should be shut down.
+         * will be shut down.
          */
         bool is_fatal;
         };
@@ -86,14 +86,20 @@ public:
     /**
      * Writer-specific output method implementing recording of zero or more log
      * entry.
-     *
-     * A batching writer implementation must override this method. If it
-     * returns false, Zeek will assume that a fatal error has occured that
-     * prevents the writer from further operation; the writer will then be
-     * disabled and eventually deleted. When returning false, an
-     * implementation should also call Error() to indicate what happened.
+     * 
+     * A batching writer implementation must override this method.
+     * 
+     * @param num_writes: The number of log records to be written.
+     * 
+     * @param vals: An array of size  \a num_writes * \a num_fields
+     * with the log values. The types of each group of \a num_fields
+     * values must match with the fields passed to Init(). The method
+     * takes ownership of \a vals..
+     * 
+     * @return A vector of WriteErrorInfo structs, describing any write failures.
+     * If all writes succeeded, this must be an empty vector.
      */
-    virtual WriteErrorInfoVector DoWriteLogs(int num_writes, threading::Value*** vals) = 0;
+    virtual WriteErrorInfoVector DoWrite(int num_writes, threading::Value*** vals) = 0;
 
     /**
      * This class's batching implementation of WriteLogs
@@ -112,6 +118,13 @@ public:
      * be terminated.
      */
     virtual bool WriteLogs(int num_writes, threading::Value*** vals) override final;
+    
+    virtual bool RunHeartbeat(double network_time, double current_time) override final;
+    
+    /**
+     * Sends statistics wherever they need to go.
+     */
+    virtual void SendStats() const override;
 };
 
 

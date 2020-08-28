@@ -121,7 +121,7 @@ public:
     /**
      * One-time initialization of the writer to define the logged fields.
      *
-     * @param num_fields
+     * @param num_fields The number of log fields for this stream
      *
      * @param fields An array of size \a num_fields with the log fields.
      * The methods takes ownership of the array.

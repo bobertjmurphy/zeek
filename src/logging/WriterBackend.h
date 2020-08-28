@@ -35,7 +35,7 @@ public:
     explicit WriterBackend(WriterFrontend* frontend);
 
         
-    protected:
+protected:
     
     /**
      * Writer-specific output method implementing recording of one log
