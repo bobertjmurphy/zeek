@@ -22,10 +22,15 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
         return true;		// No fatal errors
     }
 
+    // Do the write
     int num_fields = this->NumFields();
     const threading::Field* const *fields = this->Fields();
 	int num_written = this->DoWriteLogs(num_fields, num_writes,
 									    fields, vals);
+    
+    // Delete vals
+    DeleteVals(num_writes, vals);
+    
 	bool no_fatal_errors = (num_writes == num_written);
     return no_fatal_errors;
 }

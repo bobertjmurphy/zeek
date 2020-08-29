@@ -8,8 +8,11 @@ logging::BatchWriterBackend::BatchWriterBackend(WriterFrontend* arg_frontend) : 
 
 bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
 {
-    // Attempt the write
+    // Do the write
     WriteErrorInfoVector errors = this->DoWrite(num_writes, vals);
+    
+    // Delete vals
+    DeleteVals(num_writes, vals);
     
     // Handle any problems, and recognize any fatal errors
     size_t fatal_error_count = 0;
