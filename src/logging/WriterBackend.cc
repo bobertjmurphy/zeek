@@ -25,10 +25,6 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
     // Get necessary values
     int num_fields = this->NumFields();
     const threading::Field* const *fields = this->Fields();
-#if OLD
-	int num_written = this->DoWriteLogs(num_fields, num_writes,
-									    fields, vals);
-#else
     assert(num_fields > 0 && fields != nullptr);
     
     // Repeatedly call DoWrite()
@@ -44,7 +40,6 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
 
         num_written++;
         }
-#endif
     
     // Delete vals
     DeleteVals(num_writes, vals);
@@ -52,35 +47,6 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
 	bool no_fatal_errors = (num_writes == num_written);
     return no_fatal_errors;
 }
-
-#if OLD
-int logging::WriterBackend::DoWriteLogs(int num_fields, int num_writes,
-                               const threading::Field* const* fields,
-                               threading::Value*** vals)
-{
-    // Validate the arguments
-    assert(num_fields > 0 && num_writes >= 0);
-    
-    // Exit early if nothing is to be written
-    if (num_writes == 0) {
-        return 0;
-    }
-    
-    // Repeatedly call DoWrite()
-    int result = 0;
-    bool success = true;
-    for ( int j = 0; j < num_writes && success; j++ )
-        {
-        // Try to write to the normal destination
-        success = DoWrite(num_fields, fields, vals[j]);
-        if (success)
-            {
-            result++;
-            }
-        }
-    return result;
-}
-#endif
 
 bool logging::WriterBackend::RunHeartbeat(double network_time, double current_time)
 {

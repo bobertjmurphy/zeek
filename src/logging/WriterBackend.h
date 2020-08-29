@@ -78,40 +78,6 @@ protected:
 	 * Sends statistics wherever they need to go.
 	 */
 	virtual void SendStats() const override;
-	
-#if OLD
-private:
-	/**
-	 * Output method implementing recording zero or more log entries by simply
-	 * calling DoWrite() in a loop.
-	 *
-	 * This is a "low-level" write request that actually tries to write to
-	 * the target.
-	 *
-	 * @param num_fields: The number of log fields for this stream. The
-	 * value must match what was passed to Init().
-	 *
-	 * @param num_writes: The number of log records to be written with
-	 * this call.
-	 *
-	 * @param fields An array of size \a num_fields with the log fields.
-	 * num_fields and fields must match the values passed to Init() for
-	 * this writer.
-	 *
-	 * @param vals: An array of size \a num_fields *  \a num_writes with the
-	 * log values. Within each group of \a num_fields values, their types
-	 * must match with the field passed to Init(). The method takes ownership
-	 * of \a vals.
-	 *
-	 * @return The number of log records written. If this is not the same
-	 * as num_writes, an implementation should also call Error() to
-	 * indicate what happened. Returning a value less than num_writes does
-	 * not automatically cause the writer to shut down.
-	 */
-	virtual int DoWriteLogs(int num_fields, int num_writes,
-							const threading::Field* const* fields,
-							threading::Value*** vals);
-#endif
 
 };
 
