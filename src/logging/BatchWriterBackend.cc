@@ -30,10 +30,12 @@ bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*
     return no_fatal_errors;
 }
 
+#if OLD
 size_t logging::BatchWriterBackend::DoWriteLogs(size_t num_writes, threading::Value*** vals)
 {
     
 }
+#endif
 
 bool logging::BatchWriterBackend::RunHeartbeat(double network_time, double current_time)
 {

@@ -22,11 +22,29 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
         return true;		// No fatal errors
     }
 
-    // Do the write
+    // Get necessary values
     int num_fields = this->NumFields();
     const threading::Field* const *fields = this->Fields();
+#if OLD
 	int num_written = this->DoWriteLogs(num_fields, num_writes,
 									    fields, vals);
+#else
+    assert(num_fields > 0 && fields != nullptr);
+    
+    // Repeatedly call DoWrite()
+    int num_written = 0;
+    bool success = true;
+    for ( int j = 0; j < num_writes && success; j++ )
+        {
+        // Try to write to the normal destination
+        success = DoWrite(num_fields, fields, vals[j]);
+
+        if ( ! success )
+            break;
+
+        num_written++;
+        }
+#endif
     
     // Delete vals
     DeleteVals(num_writes, vals);
@@ -35,6 +53,7 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
     return no_fatal_errors;
 }
 
+#if OLD
 int logging::WriterBackend::DoWriteLogs(int num_fields, int num_writes,
                                const threading::Field* const* fields,
                                threading::Value*** vals)
@@ -61,6 +80,7 @@ int logging::WriterBackend::DoWriteLogs(int num_fields, int num_writes,
         }
     return result;
 }
+#endif
 
 bool logging::WriterBackend::RunHeartbeat(double network_time, double current_time)
 {

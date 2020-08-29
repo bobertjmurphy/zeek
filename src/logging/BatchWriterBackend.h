@@ -126,6 +126,7 @@ protected:
      */
     virtual void SendStats() const override;
     
+#if OLD
 private:
     /**
      * Output method that implements recording zero or more log entries, and
@@ -148,6 +149,7 @@ private:
      * not automatically cause the writer to shut down.
      */
     size_t DoWriteLogs(size_t num_writes, threading::Value*** vals);
+#endif
 
 };
 

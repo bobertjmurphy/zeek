@@ -79,6 +79,7 @@ protected:
 	 */
 	virtual void SendStats() const override;
 	
+#if OLD
 private:
 	/**
 	 * Output method implementing recording zero or more log entries by simply
@@ -110,6 +111,7 @@ private:
 	virtual int DoWriteLogs(int num_fields, int num_writes,
 							const threading::Field* const* fields,
 							threading::Value*** vals);
+#endif
 
 };
 
