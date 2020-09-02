@@ -99,7 +99,7 @@ protected:
      * @return A vector of WriteErrorInfo structs, describing any write failures.
      * If all writes succeeded, this must be an empty vector.
      */
-    virtual WriteErrorInfoVector DoWrite(int num_writes, threading::Value*** vals) = 0;
+    virtual WriteErrorInfoVector BatchWrite(int num_writes, threading::Value*** vals) = 0;
 
     /**
      * This class's batching implementation of WriteLogs

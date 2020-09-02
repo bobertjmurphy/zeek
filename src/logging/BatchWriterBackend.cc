@@ -9,7 +9,7 @@ logging::BatchWriterBackend::BatchWriterBackend(WriterFrontend* arg_frontend) : 
 bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
 {
     // Do the write
-    WriteErrorInfoVector errors = this->DoWrite(num_writes, vals);
+    WriteErrorInfoVector errors = this->BatchWrite(num_writes, vals);
     
     // Delete vals
     DeleteVals(num_writes, vals);

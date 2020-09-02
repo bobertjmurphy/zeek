@@ -15,7 +15,7 @@ using namespace threading;
 using threading::Value;
 using threading::Field;
 
-Ascii_Batch::Ascii_Batch(WriterFrontend* frontend) : WriterBackend(frontend)
+Ascii_Batch::Ascii_Batch(WriterFrontend* frontend) : BatchWriterBackend(frontend)
 	{
 	fd = 0;
 	ascii_done = false;
@@ -390,6 +390,7 @@ bool Ascii_Batch::DoFinish(double network_time)
 	return true;
 	}
 
+#if OLD
 bool Ascii_Batch::DoWrite(int num_fields, const Field* const * fields,
 			     Value** vals)
 	{
@@ -431,6 +432,13 @@ write_error:
 	Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
 	return false;
 	}
+#else // OLD
+logging::BatchWriterBackend::WriteErrorInfoVector Ascii_Batch::BatchWrite(int num_writes, threading::Value*** vals)
+{
+    /// \todo Fill me in
+    return {};
+}
+#endif // OLD
 
 bool Ascii_Batch::DoRotate(const char* rotated_path, double open, double close, bool terminating)
 	{
