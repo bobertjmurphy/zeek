@@ -350,6 +350,9 @@ bool Ascii_Batch::WriteHeader(const string& path)
 	if ( ! InternalWrite(fd, str.c_str(), str.length()) )
 		return false;
 
+    if ( ! (WriteHeaderField("writer", this->GetBackendName())) )
+            return false;
+
 	if ( ! (WriteHeaderField("set_separator", get_escaped_string(set_separator, false)) &&
 	        WriteHeaderField("empty_field", get_escaped_string(empty_field, false)) &&
 	        WriteHeaderField("unset_field", get_escaped_string(unset_field, false)) &&
