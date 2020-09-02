@@ -3,7 +3,7 @@
 #include "BatchWriterBackend.h"
 
 logging::BatchWriterBackend::BatchWriterBackend(WriterFrontend* arg_frontend) :
-BaseWriterBackend(arg_frontend), m_saw_fatal_error(false)
+BaseWriterBackend(arg_frontend), m_no_fatal_errors(true)
 {
     
 }
@@ -16,21 +16,18 @@ logging::BatchWriterBackend::~BatchWriterBackend()
 
 bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
 {
-    // If any fatal errors have been seen, bail out early
-    if (m_saw_fatal_error) {
-        DeleteVals(num_writes, vals);
-        return false;
+    if (m_no_fatal_errors) {
+		// Cache the underlying log records, and delete the top level of vals
+		if (num_writes > 0) {
+			m_cached_log_records.insert(m_cached_log_records.end(), vals, vals + num_writes);
+			delete [] vals;
+		}
+		
+		// If needed, write a batch
+		WriteBatchIfNeeded();
     }
     
-    // Cache the underlying log records, and delete the top level of vals
-    if (num_writes > 0) {
-        m_cached_log_records.insert(m_cached_log_records.end(), vals, vals + num_writes);
-        delete [] vals;
-    }
-    
-    // If needed, write a batch
-    WriteBatchIfNeeded();
-	return !m_saw_fatal_error;
+	return m_no_fatal_errors;
     
 #if OLD
     // Do the write
@@ -58,8 +55,12 @@ bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*
 
 bool logging::BatchWriterBackend::RunHeartbeat(double network_time, double current_time)
     {
-    WriteBatchIfNeeded();
-	return !m_saw_fatal_error;
+    if (m_no_fatal_errors)
+		{
+		WriteBatchIfNeeded();
+		}
+		
+	return m_no_fatal_errors;
     }
 
 void logging::BatchWriterBackend::SendStats() const

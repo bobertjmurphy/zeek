@@ -160,7 +160,7 @@ private:
      * Since requests to write are not synchronous with the calls that determine whether
      * a fatal error has occurred, this keeps track of that.
      */
-    bool m_saw_fatal_error;
+    bool m_no_fatal_errors;
 };
 
 
