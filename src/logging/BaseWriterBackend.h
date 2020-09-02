@@ -8,6 +8,13 @@
 
 #include "Component.h"
 
+// Some help with development
+#ifndef NDEBUG
+ #define UNIMPLEMENTED assert(false);
+#else
+ #define UNIMPLEMENTED
+#endif
+
 namespace broker { class data; }
 
 namespace logging  {
@@ -419,6 +426,17 @@ protected:
 	// subclasses
 	size_t items_successfully_written = 0;
 	
+    /**
+     * Regulatly triggered for execution in the child thread.
+     *
+     * network_time: The network_time when the heartbeat was trigger by
+     * the main thread.
+     *
+     * current_time: Wall clock when the heartbeat was trigger by the
+     * main thread.
+     *  
+     * @return true if the thread should continue, false if it should terminate.
+     */
 	virtual bool RunHeartbeat(double network_time, double current_time)  = 0;
 
 private:

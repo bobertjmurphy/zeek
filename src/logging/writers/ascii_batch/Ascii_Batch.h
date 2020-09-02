@@ -4,11 +4,7 @@
 
 #pragma once
 
-#if OLD
-#include "logging/WriterBackend.h"
-#else // OLD
 #include "logging/BatchWriterBackend.h"
-#endif // OLD
 #include "threading/formatters/Ascii.h"
 #include "threading/formatters/JSON.h"
 #include "Desc.h"
@@ -23,23 +19,13 @@ public:
 
 	static string LogExt();
 
-#if OLD
-	static WriterBackend* Instantiate(WriterFrontend* frontend)
-		{ return new Ascii_Batch(frontend); }
-#else
     static BatchWriterBackend* Instantiate(WriterFrontend* frontend)
         { return new Ascii_Batch(frontend); }
-#endif
 
 protected:
 	bool DoInit(const WriterInfo& info, int num_fields,
 			    const threading::Field* const* fields) override;
-#if OLD
-	bool DoWrite(int num_fields, const threading::Field* const* fields,
-			     threading::Value** vals) override;
-#else // OLD
-    WriteErrorInfoVector BatchWrite(int num_writes, threading::Value*** vals) override;
-#endif // OLD
+    WriteErrorInfoVector BatchWrite(const LogRecordBatch &records_to_write) override;
 	bool DoSetBuf(bool enabled) override;
 	bool DoRotate(const char* rotated_path, double open,
 			      double close, bool terminating) override;

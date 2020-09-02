@@ -7,6 +7,7 @@
 #include "BaseWriterBackend.h"
 
 #include <vector>
+#include <deque>
 
 namespace logging  {
 
@@ -37,9 +38,19 @@ public:
      *
      */
     explicit BatchWriterBackend(WriterFrontend* frontend);
+    
+    /**
+     * Destructor.
+     */
+    ~BatchWriterBackend() override;
 
         
 protected:
+    
+    /**
+     * A FIFO queue for caching and transmitting a sequence of log records. 
+     */
+    typedef std::deque<threading::Value**> LogRecordBatch;
     
     /**
      * Batch writers use this struct to report a problem that prevented sending a contiguous range
@@ -89,17 +100,13 @@ protected:
      * 
      * A batching writer implementation must override this method.
      * 
-     * @param num_writes: The number of log records to be written.
-     * 
-     * @param vals: An array of size  \a num_writes * \a num_fields
-     * with the log values. The types of each group of \a num_fields
-     * values must match with the fields passed to Init(). The method
-     * takes ownership of \a vals..
+     * @param records_to_write: A queue of records to be written
      * 
      * @return A vector of WriteErrorInfo structs, describing any write failures.
-     * If all writes succeeded, this must be an empty vector.
+     * If all writes succeeded, this must be an empty vector. Indices in the
+	 * struct are relative to the beginning of records_to_write.
      */
-    virtual WriteErrorInfoVector BatchWrite(int num_writes, threading::Value*** vals) = 0;
+    virtual WriteErrorInfoVector BatchWrite(const LogRecordBatch &records_to_write) = 0;
 
     /**
      * This class's batching implementation of WriteLogs
@@ -119,13 +126,41 @@ protected:
      */
     virtual bool WriteLogs(size_t num_writes, threading::Value*** vals) override final;
     
+    /**
+     * Regulatly triggered for execution in the child thread.
+     *
+     * network_time: The network_time when the heartbeat was trigger by
+     * the main thread.
+     *
+     * current_time: Wall clock when the heartbeat was trigger by the
+     * main thread.
+     *  
+     * @return true if the thread should continue, false if it should terminate.
+     */
     virtual bool RunHeartbeat(double network_time, double current_time) override final;
     
     /**
      * Sends statistics wherever they need to go.
      */
     virtual void SendStats() const override;
-
+    
+private:
+    
+    /** 
+     * A place to cache records until they can be sent in a batch
+     */
+    LogRecordBatch  m_cached_log_records;
+    
+    /** 
+     * If the batch transmission criteria have been met, send all cached records at once
+     */
+    void WriteBatchIfNeeded();
+    
+    /** 
+     * Since requests to write are not synchronous with the calls that determine whether
+     * a fatal error has occurred, this keeps track of that.
+     */
+    bool m_saw_fatal_error;
 };
 
 

@@ -433,9 +433,17 @@ write_error:
 	return false;
 	}
 #else // OLD
-logging::BatchWriterBackend::WriteErrorInfoVector Ascii_Batch::BatchWrite(int num_writes, threading::Value*** vals)
+logging::BatchWriterBackend::WriteErrorInfoVector Ascii_Batch::BatchWrite(const LogRecordBatch &records_to_writes)
 {
-    /// \todo Fill me in
+    // ### Accumulate the data in memory?
+	UNIMPLEMENTED
+    
+    // Initialize the write for this batch
+    
+    // Walk the values to be written
+    
+    // Wrap up and report any errors
+    
     return {};
 }
 #endif // OLD
