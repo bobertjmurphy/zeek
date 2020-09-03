@@ -29,8 +29,8 @@ logging::BaseWriterBackend::WriterInfo::config_map logging::BatchWriterBackend::
 		// Start off with this class's default values
 		BaseWriterBackend::WriterInfo::config_map result =
 			{
-				{   "batch:max_records",          "100"    },
-				{   "batch:max_delay_secs",       "10"     },
+				{   "batch:max_records",          "0"     },	// Indefinite
+				{   "batch:max_delay_secs",       "1"     },
 			};
 		
 		// Merge in values from the superclass, but in a way that doesn't overwrite any key/value
