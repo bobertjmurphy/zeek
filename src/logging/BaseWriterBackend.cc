@@ -381,7 +381,6 @@ std::string BaseWriterBackend::GetConfigString(const std::string& key) const
 
 BaseWriterBackend::WriterInfo::config_map BaseWriterBackend::GetDefaultConfigMap() const
 	{
-	// Get the default value
 	const static BaseWriterBackend::WriterInfo::config_map c_default_config =
 		{
 			/// \todo Fill me in

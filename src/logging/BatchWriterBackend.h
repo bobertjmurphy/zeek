@@ -127,7 +127,12 @@ protected:
     virtual bool WriteLogs(size_t num_writes, threading::Value*** vals) override final;
     
     /**
-     * Regulatly triggered for execution in the child thread.
+     * Sends statistics wherever they need to go.
+     */
+    virtual void SendStats() const override;
+    
+    /**
+     * Regularly triggered for execution in the child thread.
      *
      * network_time: The network_time when the heartbeat was trigger by
      * the main thread.
@@ -138,12 +143,23 @@ protected:
      * @return true if the thread should continue, false if it should terminate.
      */
     virtual bool RunHeartbeat(double network_time, double current_time) override final;
-    
+
+	
+	virtual BaseWriterBackend::WriterInfo::config_map GetDefaultConfigMap() const override;
+	
     /**
-     * Sends statistics wherever they need to go.
+     * Limits on how much the batching system can cache before flushing.
+	 * 
+	 *	 These values are initialized from Zeek's standard configuration system
+	 *	 during the BatchWriterBackend constructor, using the keys in the succeeding
+	 *	 comments.
+	 *	 
+	 *	 A child class of BatchWriterBackend can control its own configuration by
+	 *	 overwriting these values, either in its constructor, or later on.
      */
-    virtual void SendStats() const override;
-    
+	size_t  m_max_batch_records;      	// "batch:max_records", 0 indicates no limit
+	double  m_max_batch_delay_seconds;  // "batch:max_delay_secs", 0 indicates no limit
+
 private:
     
     /** 
@@ -166,6 +182,7 @@ private:
      * a fatal error has occurred, this keeps track of that.
      */
     bool m_no_fatal_errors;
+
 };
 
 

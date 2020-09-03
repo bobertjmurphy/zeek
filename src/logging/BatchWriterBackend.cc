@@ -5,7 +5,16 @@
 logging::BatchWriterBackend::BatchWriterBackend(WriterFrontend* arg_frontend) :
 BaseWriterBackend(arg_frontend), m_no_fatal_errors(true)
 {
-    
+	// Determine configuration values
+	std::string scratch;
+	
+	// Get the maximum number of records
+	scratch = this->GetConfigString("batch:max_records");
+	m_max_batch_records = std::stoull(scratch);
+	
+	// Get the maximum number of seconds between flushes, and make sure it's not negative
+	scratch = this->GetConfigString("batch:max_delay_secs");
+	m_max_batch_delay_seconds = std::max(std::stod(scratch), 0.0);
 }
 
 logging::BatchWriterBackend::~BatchWriterBackend()
@@ -14,6 +23,24 @@ logging::BatchWriterBackend::~BatchWriterBackend()
 	size_t cached_record_count = m_cached_log_records.size();
 	DeleteCachedLogRecords(0, cached_record_count);
 }
+
+logging::BaseWriterBackend::WriterInfo::config_map logging::BatchWriterBackend::GetDefaultConfigMap() const
+	{
+		// Start off with this class's default values
+		BaseWriterBackend::WriterInfo::config_map result =
+			{
+				{   "batch:max_records",          "100"    },
+				{   "batch:max_delay_secs",       "10"     },
+			};
+		
+		// Merge in values from the superclass, but in a way that doesn't overwrite any key/value
+		// pairs for which the key is already in result
+		BaseWriterBackend::WriterInfo::config_map superclass_map = BaseWriterBackend::GetDefaultConfigMap();
+		result.merge(superclass_map);
+		
+		return result;
+	}
+		
 
 bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
 {
