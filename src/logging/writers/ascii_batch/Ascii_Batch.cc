@@ -594,49 +594,42 @@ string Ascii_Batch::Timestamp(double t)
 
 void Ascii_Batch::InternalWrite(int fd, const char* data, int len)
 	{
-#if BOBERT
+		assert(len > 0);
 		
-		FORMAT 	Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
-
-		// Normal ASCII write. If 
-		if ( ! gzfile ) {
+		// FORMAT 	Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
+		if ( gzfile ) {					// Write to a gzipped file
 			while ( len > 0 )
 				{
-				int n = write(fd, data, len);
+				int n = gzwrite(gzfile, data, len);
 
-				if ( n < 0 )
+				if ( n <= 0 )
 					{
-					if ( errno == EINTR )
-						continue;
-
-						throw std::runtime_error(strerror(errno));
+					const char* err = gzerror(gzfile, &n);
+					throw_non_fatal_writer_error(Fmt("Error writing to %s: %s", fname.c_str(), err));
 					}
 
 				data += n;
 				len -= n;
 				}
-
-			return;
 		}
+		else {							// Normal ASCII write.
+			while ( len > 0 )
+				{
+				int n = write(fd, data, len);
+					
+				if ( n < 0 )				// Encountered an error
+					{
+					if ( errno == EINTR )		// Interrupted syscall, which is benign
+						continue;
 
-	while ( len > 0 )
-		{
-			SIMILAR TO ABOVE HERE
-		int n = gzwrite(gzfile, data, len);
+					const char* err = Strerror(errno);
+					throw_non_fatal_writer_error(Fmt("Error writing to %s: %s", fname.c_str(), err));
+					}
 
-		if ( n <= 0 )
-			{
-			const char* err = gzerror(gzfile, &n);
-			Error(Fmt("Ascii_Batch::InternalWrite error: %s\n", err));
-			return false;
-			}
-
-		data += n;
-		len -= n;
+				data += n;
+				len -= n;
+				}
 		}
-
-	return true;
-#endif
 	}
 
 bool Ascii_Batch::InternalClose(int fd)
