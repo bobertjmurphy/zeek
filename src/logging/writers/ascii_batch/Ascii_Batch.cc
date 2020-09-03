@@ -420,11 +420,15 @@ bool Ascii_Batch::DoFinish(double network_time)
 
 void Ascii_Batch::WriteOneRecord(threading::Value** vals)
 	{
-#if BOBERT
 	desc.Clear();
 
+#if OLD
 	if ( ! formatter->Describe(&desc, NumFields(), Fields(), vals) )
 		return false;
+#else
+		if ( ! formatter->Describe(&desc, NumFields(), Fields(), vals) )
+			throw_non_fatal_writer_error("Couldn't format the log record's values");
+#endif
 
 	desc.AddRaw("\n", 1);
 
@@ -437,21 +441,29 @@ void Ascii_Batch::WriteOneRecord(threading::Value** vals)
 		char hex[4] = {'\\', 'x', '0', '0'};
 		bytetohex(bytes[0], hex + 2);
 
+#if OLD
 		if ( ! InternalWrite(fd, hex, 4) )
 			goto write_error;
+#else
+			InternalWrite(fd, hex, 4);
+#endif
 
 		++bytes;
 		--len;
 		}
 
+#if OLD
 	if ( ! InternalWrite(fd, bytes, len) )
 		goto write_error;
+#else
+		InternalWrite(fd, bytes, len);
+#endif
 
-
+#if OLD
 write_error:
 	Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
 	return false;
-#endif // BOBERT
+#endif
 	}
 
 
@@ -574,6 +586,9 @@ string Ascii_Batch::Timestamp(double t)
 void Ascii_Batch::InternalWrite(int fd, const char* data, int len)
 	{
 #if BOBERT
+		
+		FORMAT 	Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
+
 		// Normal ASCII write. If 
 		if ( ! gzfile ) {
 			while ( len > 0 )
