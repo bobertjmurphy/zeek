@@ -303,16 +303,26 @@ bool Ascii_Batch::DoInit(const WriterInfo& info, int num_fields, const Field* co
 		gzfile = nullptr;
 		}
 
+#if OLD
 	if ( ! WriteHeader(path) )
 		{
 		Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
 		return false;
 		}
+#else
+		try {
+			WriteHeader(path);
+		}
+		catch (...) {
+			Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
+			return false;
+		}
+#endif
 
 	return true;
 	}
 
-bool Ascii_Batch::WriteHeader(const string& path)
+void Ascii_Batch::WriteHeader(const string& path)
 	{
 #if BOBERT
 	if ( ! include_meta )
@@ -365,8 +375,6 @@ bool Ascii_Batch::WriteHeader(const string& path)
 	        WriteHeaderField("types", types)) )
 		return false;
 #endif // BOBERT
-
-	return true;
 	}
 
 bool Ascii_Batch::DoFlush(double network_time)

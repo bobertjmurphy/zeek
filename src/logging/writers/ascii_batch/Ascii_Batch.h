@@ -35,7 +35,7 @@ protected:
 
 private:
 	bool IsSpecial(const string &path) 	{ return path.find("/dev/") == 0; }
-	bool WriteHeader(const string& path);
+	void WriteHeader(const string& path);
 	void WriteHeaderField(const string& key, const string& value);
 	void CloseFile(double t);
 	string Timestamp(double t); // Uses current time if t is zero.
