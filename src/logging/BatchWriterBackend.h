@@ -93,7 +93,9 @@ protected:
      * Batch writers use this to report problems sending zero or more ranges of log records.
      */
     typedef std::vector<WriteErrorInfo> WriteErrorInfoVector;
-    
+
+
+
     /**
      * Writer-specific output method implementing recording of zero or more log
      * entry.
@@ -146,6 +148,39 @@ protected:
 
 	
 	virtual BaseWriterBackend::WriterInfo::config_map GetDefaultConfigMap() const override;
+	
+	
+    /**
+     * Convenience exception and inline functions for errors that should shut down the writer
+     */
+	class fatal_writer_error : public runtime_error
+	{
+	public:
+		explicit fatal_writer_error(const string& __s) : runtime_error(__s) {}
+		explicit fatal_writer_error(const char* __s)   : runtime_error(__s) {}
+	};
+	inline void throw_fatal_writer_error(const string& __s) {
+		throw fatal_writer_error(__s);
+	}
+	inline void throw_fatal_writer_error_if(bool cond, const string& __s) {
+		if (cond) throw fatal_writer_error(__s);
+	}
+	
+    /**
+     * Convenience exception and inline functions for errors that shouldn't shut down the writer
+     */
+	class non_fatal_writer_error : public runtime_error
+	{
+	public:
+		explicit non_fatal_writer_error(const string& __s) : runtime_error(__s) {}
+		explicit non_fatal_writer_error(const char* __s)   : runtime_error(__s) {}
+	};
+	inline void throw_non_fatal_writer_error(const string& __s) {
+		throw non_fatal_writer_error(__s);
+	}
+	inline void throw_non_fatal_writer_error_if(bool cond, const string& __s) {
+		if (cond) throw non_fatal_writer_error(__s);
+	}
 	
     /**
      * Limits on how much the batching system can cache before flushing.

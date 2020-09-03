@@ -36,14 +36,16 @@ protected:
 private:
 	bool IsSpecial(const string &path) 	{ return path.find("/dev/") == 0; }
 	bool WriteHeader(const string& path);
-	bool WriteHeaderField(const string& key, const string& value);
+	void WriteHeaderField(const string& key, const string& value);
 	void CloseFile(double t);
 	string Timestamp(double t); // Uses current time if t is zero.
 	void InitConfigOptions();
 	bool InitFilterOptions();
 	bool InitFormatter();
-	bool InternalWrite(int fd, const char* data, int len);
+	void InternalWrite(int fd, const char* data, int len);
 	bool InternalClose(int fd);
+	
+	void WriteOneRecord(threading::Value** vals);
 
 	int fd;
 	gzFile gzfile;

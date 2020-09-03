@@ -228,11 +228,11 @@ Ascii_Batch::~Ascii_Batch()
 	delete formatter;
 	}
 
-bool Ascii_Batch::WriteHeaderField(const string& key, const string& val)
+void Ascii_Batch::WriteHeaderField(const string& key, const string& val)
 	{
 	string str = meta_prefix + key + separator + val + "\n";
 
-	return InternalWrite(fd, str.c_str(), str.length());
+	InternalWrite(fd, str.c_str(), str.length());
 	}
 
 void Ascii_Batch::CloseFile(double t)
@@ -314,6 +314,7 @@ bool Ascii_Batch::DoInit(const WriterInfo& info, int num_fields, const Field* co
 
 bool Ascii_Batch::WriteHeader(const string& path)
 	{
+#if BOBERT
 	if ( ! include_meta )
 		return true;
 
@@ -363,6 +364,7 @@ bool Ascii_Batch::WriteHeader(const string& path)
 	if ( ! (WriteHeaderField("fields", names) &&
 	        WriteHeaderField("types", types)) )
 		return false;
+#endif // BOBERT
 
 	return true;
 	}
@@ -390,16 +392,12 @@ bool Ascii_Batch::DoFinish(double network_time)
 	return true;
 	}
 
-#if OLD
-bool Ascii_Batch::DoWrite(int num_fields, const Field* const * fields,
-			     Value** vals)
+void Ascii_Batch::WriteOneRecord(threading::Value** vals)
 	{
-	if ( ! fd )
-		DoInit(Info(), NumFields(), Fields());
-
+#if BOBERT
 	desc.Clear();
 
-	if ( ! formatter->Describe(&desc, num_fields, fields, vals) )
+	if ( ! formatter->Describe(&desc, NumFields(), Fields(), vals) )
 		return false;
 
 	desc.AddRaw("\n", 1);
@@ -423,30 +421,45 @@ bool Ascii_Batch::DoWrite(int num_fields, const Field* const * fields,
 	if ( ! InternalWrite(fd, bytes, len) )
 		goto write_error;
 
-        if ( ! IsBuf() )
-		fsync(fd);
-
-	return true;
 
 write_error:
 	Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
 	return false;
+#endif // BOBERT
 	}
-#else // OLD
+
+
 logging::BatchWriterBackend::WriteErrorInfoVector Ascii_Batch::BatchWrite(const LogRecordBatch &records_to_writes)
 {
-    // ### Accumulate the data in memory?
 	UNIMPLEMENTED
+	
+#if BOBERT
     
     // Initialize the write for this batch
+	if ( ! fd )
+		DoInit(Info(), NumFields(), Fields());
     
     // Walk the values to be written
+	WriteErrorInfoVector errors;
+	size_t record_count = records_to_writes.size();
+	LogRecordBatch::iterator itr = records_to_writes.begin();
+	for (size_t i = 0; i < record_count; ++i, ++itr) {
+		try {
+			WriteOneRecord(*itr);
+		}
+		catch (std::runtime_error e) {
+			UNIMPLEMENTED
+		}
+	}
     
     // Wrap up and report any errors
+	if ( ! IsBuf() )
+		fsync(fd);
+#endif // BOBERT
     
     return {};
 }
-#endif // OLD
+
 
 bool Ascii_Batch::DoRotate(const char* rotated_path, double open, double close, bool terminating)
 	{
@@ -532,13 +545,33 @@ string Ascii_Batch::Timestamp(double t)
 	return tmp;
 	}
 
-bool Ascii_Batch::InternalWrite(int fd, const char* data, int len)
+void Ascii_Batch::InternalWrite(int fd, const char* data, int len)
 	{
-	if ( ! gzfile )
-		return safe_write(fd, data, len);
+#if BOBERT
+		// Normal ASCII write. If 
+		if ( ! gzfile ) {
+			while ( len > 0 )
+				{
+				int n = write(fd, data, len);
+
+				if ( n < 0 )
+					{
+					if ( errno == EINTR )
+						continue;
+
+						throw std::runtime_error(strerror(errno));
+					}
+
+				data += n;
+				len -= n;
+				}
+
+			return;
+		}
 
 	while ( len > 0 )
 		{
+			SIMILAR TO ABOVE HERE
 		int n = gzwrite(gzfile, data, len);
 
 		if ( n <= 0 )
@@ -553,6 +586,7 @@ bool Ascii_Batch::InternalWrite(int fd, const char* data, int len)
 		}
 
 	return true;
+#endif
 	}
 
 bool Ascii_Batch::InternalClose(int fd)
