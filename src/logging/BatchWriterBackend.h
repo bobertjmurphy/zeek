@@ -150,7 +150,12 @@ private:
      * A place to cache records until they can be sent in a batch
      */
     LogRecordBatch  m_cached_log_records;
-    
+
+    /** 
+     * Remove records from the cache
+     */
+	void DeleteCachedLogRecords(size_t first_index, size_t n_records);
+
     /** 
      * If the batch transmission criteria have been met, send all cached records at once
      */

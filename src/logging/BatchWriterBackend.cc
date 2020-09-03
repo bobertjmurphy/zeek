@@ -10,8 +10,9 @@ BaseWriterBackend(arg_frontend), m_no_fatal_errors(true)
 
 logging::BatchWriterBackend::~BatchWriterBackend()
 {
-    // Deallocate any batched values
-    UNIMPLEMENTED
+    // Deallocate any cached records
+	size_t cached_record_count = m_cached_log_records.size();
+	DeleteCachedLogRecords(0, cached_record_count);
 }
 
 bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
@@ -67,8 +68,34 @@ void logging::BatchWriterBackend::SendStats() const
     {
     /// \todo Fill me in
     }
+		 
+void logging::BatchWriterBackend::DeleteCachedLogRecords(size_t first_index, size_t n_records)
+	{
+		// Clamp the values to reasonable numbers
+		first_index = std::min(first_index, m_cached_log_records.size());
+		size_t after_last_index = std::min(first_index + n_records, m_cached_log_records.size());
+		n_records = after_last_index - first_index;
+		if (n_records == 0) {
+			return;
+		}
+		
+		// Delete the vals associated with the pointers to the records
+		int num_fields = this->NumFields();
+		for (size_t j = first_index; j <= after_last_index; ++j) {
+			for ( int i = 0; i < num_fields; i++ )
+				delete m_cached_log_records[j][i];
+
+			delete [] m_cached_log_records[j];
+		}
+		
+		// Remove the pointers from m_cached_log_records
+		m_cached_log_records.erase(m_cached_log_records.begin() + first_index,
+								   m_cached_log_records.begin() + after_last_index);
+	}
+
 
 void logging::BatchWriterBackend::WriteBatchIfNeeded()
-{
-    UNIMPLEMENTED
-}
+	{
+		assert(m_no_fatal_errors);
+		UNIMPLEMENTED
+	}
