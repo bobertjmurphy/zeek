@@ -10,87 +10,106 @@
 using threading::Value;
 using threading::Field;
 
-namespace logging  {
+namespace logging
+{
 
 // Messages sent from frontend to backend (i.e., "InputMessages").
 
 class InitMessage : public threading::InputMessage<BaseWriterBackend>
-{
-public:
-	InitMessage(BaseWriterBackend* backend, const int num_fields, const Field* const* fields)
-		: threading::InputMessage<BaseWriterBackend>("Init", backend),
-		num_fields(num_fields), fields(fields)
+	{
+	public:
+		InitMessage(BaseWriterBackend* backend, const int num_fields, const Field* const* fields)
+			: threading::InputMessage<BaseWriterBackend>("Init", backend),
+			  num_fields(num_fields), fields(fields)
 			{}
 
 
-	virtual bool Process() { return Object()->Init(num_fields, fields); }
+		virtual bool Process()
+			{
+			return Object()->Init(num_fields, fields);
+			}
 
-private:
-	const int num_fields;
-	const Field * const* fields;
-};
+	private:
+		const int num_fields;
+		const Field * const* fields;
+	};
 
 class RotateMessage : public threading::InputMessage<BaseWriterBackend>
-{
-public:
-	RotateMessage(BaseWriterBackend* backend, WriterFrontend* frontend, const char* rotated_path, const double open,
-		      const double close, const bool terminating)
-		: threading::InputMessage<BaseWriterBackend>("Rotate", backend),
-		frontend(frontend),
-		rotated_path(copy_string(rotated_path)), open(open),
-		close(close), terminating(terminating) { }
+	{
+	public:
+		RotateMessage(BaseWriterBackend* backend, WriterFrontend* frontend, const char* rotated_path, const double open,
+		              const double close, const bool terminating)
+			: threading::InputMessage<BaseWriterBackend>("Rotate", backend),
+			  frontend(frontend),
+			  rotated_path(copy_string(rotated_path)), open(open),
+			  close(close), terminating(terminating) { }
 
-	virtual ~RotateMessage()	{ delete [] rotated_path; }
+		virtual ~RotateMessage()
+			{
+			delete [] rotated_path;
+			}
 
-	virtual bool Process() { return Object()->Rotate(rotated_path, open, close, terminating); }
+		virtual bool Process()
+			{
+			return Object()->Rotate(rotated_path, open, close, terminating);
+			}
 
-private:
-	WriterFrontend* frontend;
-	const char* rotated_path;
-	const double open;
-	const double close;
-	const bool terminating;
-};
+	private:
+		WriterFrontend* frontend;
+		const char* rotated_path;
+		const double open;
+		const double close;
+		const bool terminating;
+	};
 
 class WriteMessage : public threading::InputMessage<BaseWriterBackend>
-{
-public:
-	WriteMessage(BaseWriterBackend* backend, int num_fields, int num_writes, Value*** vals)
-		: threading::InputMessage<BaseWriterBackend>("Write", backend),
-		num_fields(num_fields), num_writes(num_writes), vals(vals)	{}
+	{
+	public:
+		WriteMessage(BaseWriterBackend* backend, int num_fields, int num_writes, Value*** vals)
+			: threading::InputMessage<BaseWriterBackend>("Write", backend),
+			  num_fields(num_fields), num_writes(num_writes), vals(vals)	{}
 
-	virtual bool Process() { return Object()->Write(num_fields, num_writes, vals); }
+		virtual bool Process()
+			{
+			return Object()->Write(num_fields, num_writes, vals);
+			}
 
-private:
-	int num_fields;
-	int num_writes;
-	Value ***vals;
-};
+	private:
+		int num_fields;
+		int num_writes;
+		Value ***vals;
+	};
 
 class SetBufMessage : public threading::InputMessage<BaseWriterBackend>
-{
-public:
-	SetBufMessage(BaseWriterBackend* backend, const bool enabled)
-		: threading::InputMessage<BaseWriterBackend>("SetBuf", backend),
-		enabled(enabled) { }
+	{
+	public:
+		SetBufMessage(BaseWriterBackend* backend, const bool enabled)
+			: threading::InputMessage<BaseWriterBackend>("SetBuf", backend),
+			  enabled(enabled) { }
 
-	virtual bool Process() { return Object()->SetBuf(enabled); }
+		virtual bool Process()
+			{
+			return Object()->SetBuf(enabled);
+			}
 
-private:
-	const bool enabled;
-};
+	private:
+		const bool enabled;
+	};
 
 class FlushMessage : public threading::InputMessage<BaseWriterBackend>
-{
-public:
-	FlushMessage(BaseWriterBackend* backend, double network_time)
-		: threading::InputMessage<BaseWriterBackend>("Flush", backend),
-		network_time(network_time) {}
+	{
+	public:
+		FlushMessage(BaseWriterBackend* backend, double network_time)
+			: threading::InputMessage<BaseWriterBackend>("Flush", backend),
+			  network_time(network_time) {}
 
-	virtual bool Process() { return Object()->Flush(network_time); }
-private:
-	double network_time;
-};
+		virtual bool Process()
+			{
+			return Object()->Flush(network_time);
+			}
+	private:
+		double network_time;
+	};
 
 }
 
@@ -182,10 +201,10 @@ void WriterFrontend::Init(int arg_num_fields, const Field* const * arg_fields)
 	if ( remote )
 		{
 		broker_mgr->PublishLogCreate(stream,
-					     writer,
-					     *info,
-					     arg_num_fields,
-					     arg_fields);
+		                             writer,
+		                             *info,
+		                             arg_num_fields,
+		                             arg_fields);
 		}
 
 	}
@@ -208,10 +227,10 @@ void WriterFrontend::Write(int arg_num_fields, Value** vals)
 	if ( remote )
 		{
 		broker_mgr->PublishLogWrite(stream,
-				writer,
-				info->path,
-				num_fields,
-				vals);
+		                            writer,
+		                            info->path,
+		                            num_fields,
+		                            vals);
 		}
 
 	if ( ! backend )

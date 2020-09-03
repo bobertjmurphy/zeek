@@ -41,41 +41,41 @@ void Ascii::InitConfigOptions()
 	gzip_level = BifConst::LogAscii::gzip_level;
 
 	separator.assign(
-			(const char*) BifConst::LogAscii::separator->Bytes(),
-			BifConst::LogAscii::separator->Len()
-			);
+	    (const char*) BifConst::LogAscii::separator->Bytes(),
+	    BifConst::LogAscii::separator->Len()
+	);
 
 	set_separator.assign(
-			(const char*) BifConst::LogAscii::set_separator->Bytes(),
-			BifConst::LogAscii::set_separator->Len()
-			);
+	    (const char*) BifConst::LogAscii::set_separator->Bytes(),
+	    BifConst::LogAscii::set_separator->Len()
+	);
 
 	empty_field.assign(
-			(const char*) BifConst::LogAscii::empty_field->Bytes(),
-			BifConst::LogAscii::empty_field->Len()
-			);
+	    (const char*) BifConst::LogAscii::empty_field->Bytes(),
+	    BifConst::LogAscii::empty_field->Len()
+	);
 
 	unset_field.assign(
-			(const char*) BifConst::LogAscii::unset_field->Bytes(),
-			BifConst::LogAscii::unset_field->Len()
-			);
+	    (const char*) BifConst::LogAscii::unset_field->Bytes(),
+	    BifConst::LogAscii::unset_field->Len()
+	);
 
 	meta_prefix.assign(
-			(const char*) BifConst::LogAscii::meta_prefix->Bytes(),
-			BifConst::LogAscii::meta_prefix->Len()
-			);
+	    (const char*) BifConst::LogAscii::meta_prefix->Bytes(),
+	    BifConst::LogAscii::meta_prefix->Len()
+	);
 
 	ODesc tsfmt;
 	BifConst::LogAscii::json_timestamps->Describe(&tsfmt);
 	json_timestamps.assign(
-			(const char*) tsfmt.Bytes(),
-			tsfmt.Len()
-			);
+	    (const char*) tsfmt.Bytes(),
+	    tsfmt.Len()
+	);
 
 	gzip_file_extension.assign(
-		(const char*) BifConst::LogAscii::gzip_file_extension->Bytes(),
-		BifConst::LogAscii::gzip_file_extension->Len()
-		);
+	    (const char*) BifConst::LogAscii::gzip_file_extension->Bytes(),
+	    BifConst::LogAscii::gzip_file_extension->Len()
+	);
 	}
 
 bool Ascii::InitFilterOptions()
@@ -84,7 +84,7 @@ bool Ascii::InitFilterOptions()
 
 	// Set per-filter configuration options.
 	for ( WriterInfo::config_map::const_iterator i = info.config.begin();
-	      i != info.config.end(); ++i )
+	        i != info.config.end(); ++i )
 		{
 		if ( strcmp(i->first, "tsv") == 0 )
 			{
@@ -273,7 +273,7 @@ bool Ascii::DoInit(const WriterInfo& info, int num_fields, const Field* const * 
 	if ( fd < 0 )
 		{
 		Error(Fmt("cannot open %s: %s", fname.c_str(),
-			  Strerror(errno)));
+		          Strerror(errno)));
 		fd = 0;
 		return false;
 		}
@@ -294,14 +294,12 @@ bool Ascii::DoInit(const WriterInfo& info, int num_fields, const Field* const * 
 		if ( gzfile == nullptr )
 			{
 			Error(Fmt("cannot gzip %s: %s", fname.c_str(),
-			                                Strerror(errno)));
+			          Strerror(errno)));
 			return false;
 			}
 		}
 	else
-		{
 		gzfile = nullptr;
-		}
 
 	if ( ! WriteHeader(path) )
 		{
@@ -343,9 +341,9 @@ bool Ascii::WriteHeader(const string& path)
 		}
 
 	string str = meta_prefix
-		+ "separator " // Always use space as separator here.
-		+ get_escaped_string(separator, false)
-		+ "\n";
+	             + "separator " // Always use space as separator here.
+	             + get_escaped_string(separator, false)
+	             + "\n";
 
 	if ( ! InternalWrite(fd, str.c_str(), str.length()) )
 		return false;
@@ -388,7 +386,7 @@ bool Ascii::DoFinish(double network_time)
 	}
 
 bool Ascii::DoWrite(int num_fields, const Field* const * fields,
-			     Value** vals)
+                    Value** vals)
 	{
 	if ( ! fd )
 		DoInit(Info(), NumFields(), Fields());
@@ -419,7 +417,7 @@ bool Ascii::DoWrite(int num_fields, const Field* const * fields,
 	if ( ! InternalWrite(fd, bytes, len) )
 		goto write_error;
 
-        if ( ! IsBuf() )
+	if ( ! IsBuf() )
 		fsync(fd);
 
 	return true;
@@ -549,21 +547,22 @@ bool Ascii::InternalClose(int fd)
 	if ( res == Z_OK )
 		return true;
 
-	switch ( res ) {
-	case Z_STREAM_ERROR:
-		Error("Ascii::InternalClose gzclose error: invalid file stream");
-		break;
-	case Z_BUF_ERROR:
-		Error("Ascii::InternalClose gzclose error: "
-		      "no compression progress possible during buffer flush");
-		break;
-	case Z_ERRNO:
-		Error(Fmt("Ascii::InternalClose gzclose error: %s\n", Strerror(errno)));
-		break;
-	default:
-		Error("Ascii::InternalClose invalid gzclose result");
-		break;
-	}
+	switch ( res )
+		{
+		case Z_STREAM_ERROR:
+			Error("Ascii::InternalClose gzclose error: invalid file stream");
+			break;
+		case Z_BUF_ERROR:
+			Error("Ascii::InternalClose gzclose error: "
+			      "no compression progress possible during buffer flush");
+			break;
+		case Z_ERRNO:
+			Error(Fmt("Ascii::InternalClose gzclose error: %s\n", Strerror(errno)));
+			break;
+		default:
+			Error("Ascii::InternalClose invalid gzclose result");
+			break;
+		}
 
 	return false;
 	}

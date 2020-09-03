@@ -5,21 +5,24 @@
 
 #include "Ascii.h"
 
-namespace plugin {
-namespace Zeek_AsciiWriter {
+namespace plugin
+{
+namespace Zeek_AsciiWriter
+{
 
-class Plugin : public plugin::Plugin {
-public:
-	plugin::Configuration Configure()
-		{
-		AddComponent(new ::logging::Component("Ascii", ::logging::writer::Ascii::Instantiate));
+class Plugin : public plugin::Plugin
+	{
+	public:
+		plugin::Configuration Configure()
+			{
+			AddComponent(new ::logging::Component("Ascii", ::logging::writer::Ascii::Instantiate));
 
-		plugin::Configuration config;
-		config.name = "Zeek::AsciiWriter";
-		config.description = "ASCII log writer";
-		return config;
-		}
-} plugin;
+			plugin::Configuration config;
+			config.name = "Zeek::AsciiWriter";
+			config.description = "ASCII log writer";
+			return config;
+			}
+	} plugin;
 
 }
 }

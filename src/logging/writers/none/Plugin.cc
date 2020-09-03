@@ -5,21 +5,24 @@
 
 #include "None.h"
 
-namespace plugin {
-namespace Zeek_NoneWriter {
+namespace plugin
+{
+namespace Zeek_NoneWriter
+{
 
-class Plugin : public plugin::Plugin {
-public:
-	plugin::Configuration Configure()
-		{
-		AddComponent(new ::logging::Component("None", ::logging::writer::None::Instantiate));
+class Plugin : public plugin::Plugin
+	{
+	public:
+		plugin::Configuration Configure()
+			{
+			AddComponent(new ::logging::Component("None", ::logging::writer::None::Instantiate));
 
-		plugin::Configuration config;
-		config.name = "Zeek::NoneWriter";
-		config.description = "None log writer (primarily for debugging)";
-		return config;
-		}
-} plugin;
+			plugin::Configuration config;
+			config.name = "Zeek::NoneWriter";
+			config.description = "None log writer (primarily for debugging)";
+			return config;
+			}
+	} plugin;
 
 }
 }

@@ -41,41 +41,41 @@ void Ascii_Batch::InitConfigOptions()
 	gzip_level = BifConst::LogAsciiBatch::gzip_level;
 
 	separator.assign(
-			(const char*) BifConst::LogAsciiBatch::separator->Bytes(),
-			BifConst::LogAsciiBatch::separator->Len()
-			);
+	    (const char*) BifConst::LogAsciiBatch::separator->Bytes(),
+	    BifConst::LogAsciiBatch::separator->Len()
+	);
 
 	set_separator.assign(
-			(const char*) BifConst::LogAsciiBatch::set_separator->Bytes(),
-			BifConst::LogAsciiBatch::set_separator->Len()
-			);
+	    (const char*) BifConst::LogAsciiBatch::set_separator->Bytes(),
+	    BifConst::LogAsciiBatch::set_separator->Len()
+	);
 
 	empty_field.assign(
-			(const char*) BifConst::LogAsciiBatch::empty_field->Bytes(),
-			BifConst::LogAsciiBatch::empty_field->Len()
-			);
+	    (const char*) BifConst::LogAsciiBatch::empty_field->Bytes(),
+	    BifConst::LogAsciiBatch::empty_field->Len()
+	);
 
 	unset_field.assign(
-			(const char*) BifConst::LogAsciiBatch::unset_field->Bytes(),
-			BifConst::LogAsciiBatch::unset_field->Len()
-			);
+	    (const char*) BifConst::LogAsciiBatch::unset_field->Bytes(),
+	    BifConst::LogAsciiBatch::unset_field->Len()
+	);
 
 	meta_prefix.assign(
-			(const char*) BifConst::LogAsciiBatch::meta_prefix->Bytes(),
-			BifConst::LogAsciiBatch::meta_prefix->Len()
-			);
+	    (const char*) BifConst::LogAsciiBatch::meta_prefix->Bytes(),
+	    BifConst::LogAsciiBatch::meta_prefix->Len()
+	);
 
 	ODesc tsfmt;
 	BifConst::LogAsciiBatch::json_timestamps->Describe(&tsfmt);
 	json_timestamps.assign(
-			(const char*) tsfmt.Bytes(),
-			tsfmt.Len()
-			);
+	    (const char*) tsfmt.Bytes(),
+	    tsfmt.Len()
+	);
 
 	gzip_file_extension.assign(
-		(const char*) BifConst::LogAsciiBatch::gzip_file_extension->Bytes(),
-		BifConst::LogAsciiBatch::gzip_file_extension->Len()
-		);
+	    (const char*) BifConst::LogAsciiBatch::gzip_file_extension->Bytes(),
+	    BifConst::LogAsciiBatch::gzip_file_extension->Len()
+	);
 	}
 
 bool Ascii_Batch::InitFilterOptions()
@@ -84,7 +84,7 @@ bool Ascii_Batch::InitFilterOptions()
 
 	// Set per-filter configuration options.
 	for ( WriterInfo::config_map::const_iterator i = info.config.begin();
-	      i != info.config.end(); ++i )
+	        i != info.config.end(); ++i )
 		{
 		if ( strcmp(i->first, "tsv") == 0 )
 			{
@@ -273,7 +273,7 @@ bool Ascii_Batch::DoInit(const WriterInfo& info, int num_fields, const Field* co
 	if ( fd < 0 )
 		{
 		Error(Fmt("cannot open %s: %s", fname.c_str(),
-			  Strerror(errno)));
+		          Strerror(errno)));
 		fd = 0;
 		return false;
 		}
@@ -294,22 +294,22 @@ bool Ascii_Batch::DoInit(const WriterInfo& info, int num_fields, const Field* co
 		if ( gzfile == nullptr )
 			{
 			Error(Fmt("cannot gzip %s: %s", fname.c_str(),
-			                                Strerror(errno)));
+			          Strerror(errno)));
 			return false;
 			}
 		}
 	else
-		{
 		gzfile = nullptr;
-		}
 
-	try {
+	try
+		{
 		WriteHeader(path);
-	}
-	catch (...) {
+		}
+	catch (...)
+		{
 		Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
 		return false;
-	}
+		}
 
 	return true;
 	}
@@ -343,9 +343,9 @@ void Ascii_Batch::WriteHeader(const string& path)
 		}
 
 	string str = meta_prefix
-		+ "separator " // Always use space as separator here.
-		+ get_escaped_string(separator, false)
-		+ "\n";
+	             + "separator " // Always use space as separator here.
+	             + get_escaped_string(separator, false)
+	             + "\n";
 
 	InternalWrite(fd, str.c_str(), str.length());
 
@@ -402,7 +402,7 @@ void Ascii_Batch::WriteOneRecord(threading::Value** vals)
 		char hex[4] = {'\\', 'x', '0', '0'};
 		bytetohex(bytes[0], hex + 2);
 
-			InternalWrite(fd, hex, 4);
+		InternalWrite(fd, hex, 4);
 
 		++bytes;
 		--len;
@@ -413,44 +413,50 @@ void Ascii_Batch::WriteOneRecord(threading::Value** vals)
 
 
 logging::BatchWriterBackend::WriteErrorInfoVector Ascii_Batch::BatchWrite(const LogRecordBatch &records_to_write)
-{
-    
-    // Initialize the write for this batch
+	{
+
+	// Initialize the write for this batch
 	if ( ! fd )
 		DoInit(Info(), NumFields(), Fields());
-    
-    // Write the log records in this batch
+
+	// Write the log records in this batch
 	WriteErrorInfoVector errors;
 	size_t record_count = records_to_write.size();
 	LogRecordBatch::const_iterator itr = records_to_write.begin();
-	for (size_t i = 0; i < record_count; ++i, ++itr) {
+	for (size_t i = 0; i < record_count; ++i, ++itr)
+		{
 		// Try to write this log record, and record any fatal or non-fatal errors
-		try {
+		try
+			{
 			WriteOneRecord(*itr);
-		}
-		catch (fatal_writer_error e) {
+			}
+		catch (fatal_writer_error e)
+			{
 			errors.emplace_back(i, 1, e.what(), true);
-		}
-		catch (non_fatal_writer_error e) {
+			}
+		catch (non_fatal_writer_error e)
+			{
 			errors.emplace_back(i, 1, e.what(), false);
-		}
-		
+			}
+
 		// If there was an error, don't write any remaining records
-		if (!errors.empty()) {
+		if (!errors.empty())
+			{
 			size_t next_record_index = i + 1;
-			if (next_record_index < record_count) {
+			if (next_record_index < record_count)
+				{
 				errors.emplace_back(next_record_index, record_count - next_record_index,
-									"Not written due to previous error", false);
+				                    "Not written due to previous error", false);
+				}
 			}
 		}
-	}
-    
-    // Wrap up and report any errors
+
+	// Wrap up and report any errors
 	if ( ! IsBuf() )
 		fsync(fd);
-    
-    return errors;
-}
+
+	return errors;
+	}
 
 
 bool Ascii_Batch::DoRotate(const char* rotated_path, double open, double close, bool terminating)
@@ -539,41 +545,43 @@ string Ascii_Batch::Timestamp(double t)
 
 void Ascii_Batch::InternalWrite(int fd, const char* data, int len)
 	{
-		assert(len > 0);
-		
-		// FORMAT 	Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
-		if ( gzfile ) {					// Write to a gzipped file
-			while ( len > 0 )
+	assert(len > 0);
+
+	// FORMAT 	Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
+	if ( gzfile )  					// Write to a gzipped file
+		{
+		while ( len > 0 )
+			{
+			int n = gzwrite(gzfile, data, len);
+
+			if ( n <= 0 )
 				{
-				int n = gzwrite(gzfile, data, len);
-
-				if ( n <= 0 )
-					{
-					const char* err = gzerror(gzfile, &n);
-					throw_non_fatal_writer_error(Fmt("Error writing to %s: %s", fname.c_str(), err));
-					}
-
-				data += n;
-				len -= n;
+				const char* err = gzerror(gzfile, &n);
+				throw_non_fatal_writer_error(Fmt("Error writing to %s: %s", fname.c_str(), err));
 				}
+
+			data += n;
+			len -= n;
+			}
 		}
-		else {							// Normal ASCII write.
-			while ( len > 0 )
+	else  							// Normal ASCII write.
+		{
+		while ( len > 0 )
+			{
+			int n = write(fd, data, len);
+
+			if ( n < 0 )				// Encountered an error
 				{
-				int n = write(fd, data, len);
-					
-				if ( n < 0 )				// Encountered an error
-					{
-					if ( errno == EINTR )		// Interrupted syscall, which is benign
-						continue;
+				if ( errno == EINTR )		// Interrupted syscall, which is benign
+					continue;
 
-					const char* err = Strerror(errno);
-					throw_non_fatal_writer_error(Fmt("Error writing to %s: %s", fname.c_str(), err));
-					}
-
-				data += n;
-				len -= n;
+				const char* err = Strerror(errno);
+				throw_non_fatal_writer_error(Fmt("Error writing to %s: %s", fname.c_str(), err));
 				}
+
+			data += n;
+			len -= n;
+			}
 		}
 	}
 
@@ -590,21 +598,22 @@ bool Ascii_Batch::InternalClose(int fd)
 	if ( res == Z_OK )
 		return true;
 
-	switch ( res ) {
-	case Z_STREAM_ERROR:
-		Error("Ascii_Batch::InternalClose gzclose error: invalid file stream");
-		break;
-	case Z_BUF_ERROR:
-		Error("Ascii_Batch::InternalClose gzclose error: "
-		      "no compression progress possible during buffer flush");
-		break;
-	case Z_ERRNO:
-		Error(Fmt("Ascii_Batch::InternalClose gzclose error: %s\n", Strerror(errno)));
-		break;
-	default:
-		Error("Ascii_Batch::InternalClose invalid gzclose result");
-		break;
-	}
+	switch ( res )
+		{
+		case Z_STREAM_ERROR:
+			Error("Ascii_Batch::InternalClose gzclose error: invalid file stream");
+			break;
+		case Z_BUF_ERROR:
+			Error("Ascii_Batch::InternalClose gzclose error: "
+			      "no compression progress possible during buffer flush");
+			break;
+		case Z_ERRNO:
+			Error(Fmt("Ascii_Batch::InternalClose gzclose error: %s\n", Strerror(errno)));
+			break;
+		default:
+			Error("Ascii_Batch::InternalClose invalid gzclose result");
+			break;
+		}
 
 	return false;
 	}

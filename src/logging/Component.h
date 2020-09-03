@@ -6,7 +6,8 @@
 #include "plugin/Component.h"
 #include "plugin/TaggedComponent.h"
 
-namespace logging {
+namespace logging
+{
 
 class WriterFrontend;
 class BaseWriterBackend;
@@ -17,53 +18,57 @@ class BatchWriterBackend;
  * Component description for plugins providing log writers.
  */
 class Component : public plugin::Component,
-		  public plugin::TaggedComponent<logging::Tag> {
-public:
-	typedef BaseWriterBackend* (*base_factory_callback)(WriterFrontend* frontend);
-	typedef WriterBackend* (*factory_callback)(WriterFrontend* frontend);
-	typedef BatchWriterBackend* (*batch_factory_callback)(WriterFrontend* frontend);
+	public plugin::TaggedComponent<logging::Tag>
+	{
+	public:
+		typedef BaseWriterBackend* (*base_factory_callback)(WriterFrontend* frontend);
+		typedef WriterBackend* (*factory_callback)(WriterFrontend* frontend);
+		typedef BatchWriterBackend* (*batch_factory_callback)(WriterFrontend* frontend);
 
-	/**
-	 * Constructor.
-	 *
-	 * @param name The name of the provided writer. This name is used
-	 * across the system to identify the writer.
-	 *
-	 * @param factory A factory function to instantiate instances of the
-	 * writers's class, which must be derived directly or indirectly from
-	 * logging::BaseWriterBackend. This is typically a static \c Instatiate()
-	 * method inside the class that just allocates and returns a new
-	 * instance.
-	 */
-	Component(const std::string& name, base_factory_callback factory);
-	Component(const std::string& name, factory_callback factory);
-	Component(const std::string& name, batch_factory_callback factory);
+		/**
+		 * Constructor.
+		 *
+		 * @param name The name of the provided writer. This name is used
+		 * across the system to identify the writer.
+		 *
+		 * @param factory A factory function to instantiate instances of the
+		 * writers's class, which must be derived directly or indirectly from
+		 * logging::BaseWriterBackend. This is typically a static \c Instatiate()
+		 * method inside the class that just allocates and returns a new
+		 * instance.
+		 */
+		Component(const std::string& name, base_factory_callback factory);
+		Component(const std::string& name, factory_callback factory);
+		Component(const std::string& name, batch_factory_callback factory);
 
-	/**
-	 * Destructor.
-	 */
-	~Component() override;
+		/**
+		 * Destructor.
+		 */
+		~Component() override;
 
-	/**
-	 * Initialization function. This function has to be called before any
-	 * plugin component functionality is used; it is used to add the
-	 * plugin component to the list of components and to initialize tags
-	 */
-	void Initialize() override;
+		/**
+		 * Initialization function. This function has to be called before any
+		 * plugin component functionality is used; it is used to add the
+		 * plugin component to the list of components and to initialize tags
+		 */
+		void Initialize() override;
 
-	/**
-	 * Returns the writer's factory function.
-	 */
-	base_factory_callback Factory() const	{ return factory; }
+		/**
+		 * Returns the writer's factory function.
+		 */
+		base_factory_callback Factory() const
+			{
+			return factory;
+			}
 
-protected:
-	/**
-	  * Overriden from plugin::Component.
-	  */
-	void DoDescribe(ODesc* d) const override;
+	protected:
+		/**
+		  * Overriden from plugin::Component.
+		  */
+		void DoDescribe(ODesc* d) const override;
 
-private:
-	base_factory_callback factory;
-};
+	private:
+		base_factory_callback factory;
+	};
 
 }

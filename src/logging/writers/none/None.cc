@@ -10,7 +10,7 @@ using namespace logging;
 using namespace writer;
 
 bool None::DoInit(const WriterInfo& info, int num_fields,
-	    const threading::Field* const * fields)
+                  const threading::Field* const * fields)
 	{
 	if ( BifConst::LogNone::debug )
 		{
@@ -35,7 +35,7 @@ bool None::DoInit(const WriterInfo& info, int num_fields,
 			{
 			const threading::Field* field = fields[i];
 			std::cout << "  field " << field->name << ": "
-				  << type_name(field->type) << std::endl;
+			          << type_name(field->type) << std::endl;
 			}
 
 		std::cout << std::endl;
