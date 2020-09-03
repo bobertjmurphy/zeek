@@ -3,7 +3,7 @@
 #include "BatchWriterBackend.h"
 
 logging::BatchWriterBackend::BatchWriterBackend(WriterFrontend* arg_frontend) :
-BaseWriterBackend(arg_frontend), m_no_fatal_errors(true)
+BaseWriterBackend(arg_frontend), m_first_record_wallclock_time(0)
 {
 	// Determine configuration values
 	std::string scratch;
@@ -44,51 +44,27 @@ logging::BaseWriterBackend::WriterInfo::config_map logging::BatchWriterBackend::
 
 bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
 {
-    if (m_no_fatal_errors) {
-		// Cache the underlying log records, and delete the top level of vals
-		if (num_writes > 0) {
-			m_cached_log_records.insert(m_cached_log_records.end(), vals, vals + num_writes);
-			delete [] vals;
+	if (num_writes > 0) {
+		// Will this put the first record into the cache?
+		if (m_cached_log_records.empty()) {
+			m_first_record_wallclock_time = current_time(true);
 		}
 		
-		// If needed, write a batch
-		WriteBatchIfNeeded();
-    }
-    
-	return m_no_fatal_errors;
-    
-#if OLD
-    // Do the write
-    WriteErrorInfoVector errors = this->BatchWrite(num_writes, vals);
-    
-    // Delete vals
-    DeleteVals(num_writes, vals);
-    
-    // Handle any problems, and recognize any fatal errors
-    size_t fatal_error_count = 0;
-    for (const WriteErrorInfo& this_error : errors) {
-        /// \todo Use first_record_index, description, and description to report problems
-        
-        // Keep track of fatal errors
-        bool this_error_is_fatal = this_error.is_fatal;
-        if (this_error_is_fatal) {
-            fatal_error_count += 1;
-        }
-    }
-    
-    bool no_fatal_errors = (fatal_error_count == 0);
-    return no_fatal_errors;
-#endif
+		// Cache the underlying log records, and delete the top level of vals
+		m_cached_log_records.insert(m_cached_log_records.end(), vals, vals + num_writes);
+		delete [] vals;
+	}
+	
+	// If needed, write a batch
+	bool no_fatal_errors = WriteBatchIfNeeded();
+	return no_fatal_errors;
 }
 
 bool logging::BatchWriterBackend::RunHeartbeat(double network_time, double current_time)
     {
-    if (m_no_fatal_errors)
-		{
-		WriteBatchIfNeeded();
-		}
-		
-	return m_no_fatal_errors;
+	// If needed, write a batch
+	bool no_fatal_errors = WriteBatchIfNeeded();
+	return no_fatal_errors;
     }
 
 void logging::BatchWriterBackend::SendStats() const
@@ -121,8 +97,43 @@ void logging::BatchWriterBackend::DeleteCachedLogRecords(size_t first_index, siz
 	}
 
 
-void logging::BatchWriterBackend::WriteBatchIfNeeded()
+bool logging::BatchWriterBackend::WriteBatchIfNeeded()
 	{
-		assert(m_no_fatal_errors);
-		UNIMPLEMENTED
+		// Don't write anything if nothing is cached
+		if (m_cached_log_records.empty()) {
+			return true;		// No fatal errors
+		}
+		
+		// Don't write if the write criteria haven't been met
+		bool write_batch = false;
+		if (m_max_batch_records != 0) {
+			size_t record_count = m_cached_log_records.size();
+			write_batch = (record_count >= m_max_batch_records);
+		}
+		if (!write_batch && (m_max_batch_delay_seconds > 0)) {
+			double current_wallclock_time = current_time(true);
+			double delay = current_wallclock_time - m_first_record_wallclock_time;
+			write_batch = (delay >= m_max_batch_delay_seconds);
+		}
+		if (!write_batch) {
+			return true;		// No fatal errors
+		}
+		
+		// Do the write
+		WriteErrorInfoVector errors = BatchWrite(m_cached_log_records);
+		
+		// Analyze any reported errors
+		bool has_fatal_errors = false;
+		for (const WriteErrorInfo& this_error: errors) {
+			// Report any errors
+			/// \todo Report the record count and description
+			
+			// Note any fatal errors
+			has_fatal_errors |= this_error.is_fatal;
+		}
+		
+		// Clear the cache and return
+		size_t cached_record_count = m_cached_log_records.size();
+		DeleteCachedLogRecords(0, cached_record_count);
+		return !has_fatal_errors;
 	}

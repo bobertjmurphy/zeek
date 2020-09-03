@@ -175,13 +175,20 @@ private:
     /** 
      * If the batch transmission criteria have been met, send all cached records at once
      */
-    void WriteBatchIfNeeded();
+    bool WriteBatchIfNeeded();
     
+#if OLD
     /** 
      * Since requests to write are not synchronous with the calls that determine whether
      * a fatal error has occurred, this keeps track of that.
      */
     bool m_no_fatal_errors;
+#endif
+	
+    /** 
+     * The time the first record currently in the cache was added.
+     */
+	double m_first_record_wallclock_time;
 
 };
 
