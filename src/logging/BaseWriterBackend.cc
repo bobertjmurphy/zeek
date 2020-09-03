@@ -118,7 +118,8 @@ bool BaseWriterBackend::WriterInfo::FromBroker(broker::data d)
     return true;
     }
 
-BaseWriterBackend::BaseWriterBackend(WriterFrontend* arg_frontend) : MsgThread()
+BaseWriterBackend::BaseWriterBackend(WriterFrontend* arg_frontend) :
+MsgThread(), m_default_config_map_inited(false)
     {
     num_fields = 0;
     fields = 0;
@@ -340,13 +341,24 @@ bool BaseWriterBackend::OnHeartbeat(double network_time, double current_time)
     
 std::string BaseWriterBackend::GetConfigString(const std::string& key) const
 	{
+#if OLD
+		
 	// Get the default value
 	const static BaseWriterBackend::WriterInfo::config_map s_default_config =
 		{
 			/// \todo Fill me in
 		};
 	BaseWriterBackend::WriterInfo::config_map::const_iterator itr = s_default_config.find(key.c_str());
-	assert(itr != s_default_config.end());
+		assert(itr != s_default_config.end());
+#else
+	// If needed, set up the default config map
+	if (!m_default_config_map_inited) {
+		m_default_config_map = GetDefaultConfigMap();
+		m_default_config_map_inited = true;
+	}
+	BaseWriterBackend::WriterInfo::config_map::const_iterator itr = m_default_config_map.find(key.c_str());
+		assert(itr != m_default_config_map.end());
+#endif
 	std::string result = itr->second;
 
 	// If present in the config, use that value. If this exists, it can be inited as a global
@@ -365,6 +377,16 @@ std::string BaseWriterBackend::GetConfigString(const std::string& key) const
 
 
 	return result;
+	}
+
+BaseWriterBackend::WriterInfo::config_map BaseWriterBackend::GetDefaultConfigMap() const
+	{
+	// Get the default value
+	const static BaseWriterBackend::WriterInfo::config_map c_default_config =
+		{
+			/// \todo Fill me in
+		};
+		return c_default_config;
 	}
 
 std::string BaseWriterBackend::GetFrontendName() const

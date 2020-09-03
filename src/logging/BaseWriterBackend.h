@@ -427,7 +427,7 @@ protected:
 	size_t items_successfully_written = 0;
 	
     /**
-     * Regulatly triggered for execution in the child thread.
+     * Regularly triggered for execution in the child thread.
      *
      * network_time: The network_time when the heartbeat was trigger by
      * the main thread.
@@ -437,7 +437,9 @@ protected:
      *  
      * @return true if the thread should continue, false if it should terminate.
      */
-	virtual bool RunHeartbeat(double network_time, double current_time)  = 0;
+	virtual bool RunHeartbeat(double network_time, double current_time) = 0;
+	
+	virtual BaseWriterBackend::WriterInfo::config_map GetDefaultConfigMap() const;
 
 private:
 
@@ -453,6 +455,11 @@ private:
     int rotation_counter; // Tracks FinishedRotation() calls.
     
 	std::string m_backend_name;
+	
+	// The default configuration map can be initialized inside GetConfigString(),
+	// which is const
+	mutable BaseWriterBackend::WriterInfo::config_map m_default_config_map;
+	mutable bool m_default_config_map_inited;
 };
 
 
