@@ -303,21 +303,13 @@ bool Ascii_Batch::DoInit(const WriterInfo& info, int num_fields, const Field* co
 		gzfile = nullptr;
 		}
 
-#if OLD
-	if ( ! WriteHeader(path) )
-		{
+	try {
+		WriteHeader(path);
+	}
+	catch (...) {
 		Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
 		return false;
-		}
-#else
-		try {
-			WriteHeader(path);
-		}
-		catch (...) {
-			Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
-			return false;
-		}
-#endif
+	}
 
 	return true;
 	}
@@ -346,15 +338,8 @@ void Ascii_Batch::WriteHeader(const string& path)
 		{
 		// A single TSV-style line is all we need.
 		string str = names + "\n";
-#if OLD
-		if ( ! InternalWrite(fd, str.c_str(), str.length()) )
-			return false;
-
-		return true;
-#else
-			InternalWrite(fd, str.c_str(), str.length());
-			return;
-#endif
+		InternalWrite(fd, str.c_str(), str.length());
+		return;
 		}
 
 	string str = meta_prefix
@@ -362,37 +347,18 @@ void Ascii_Batch::WriteHeader(const string& path)
 		+ get_escaped_string(separator, false)
 		+ "\n";
 
-#if OLD
-	if ( ! InternalWrite(fd, str.c_str(), str.length()) )
-		return false;
+	InternalWrite(fd, str.c_str(), str.length());
 
-    if ( ! (WriteHeaderField("writer", this->GetBackendName())) )
-            return false;
+	WriteHeaderField("writer", this->GetBackendName());
 
-	if ( ! (WriteHeaderField("set_separator", get_escaped_string(set_separator, false)) &&
-	        WriteHeaderField("empty_field", get_escaped_string(empty_field, false)) &&
-	        WriteHeaderField("unset_field", get_escaped_string(unset_field, false)) &&
-	        WriteHeaderField("path", get_escaped_string(path, false)) &&
-	        WriteHeaderField("open", Timestamp(0))) )
-		return false;
+	WriteHeaderField("set_separator", get_escaped_string(set_separator, false));
+	WriteHeaderField("empty_field", get_escaped_string(empty_field, false));
+	WriteHeaderField("unset_field", get_escaped_string(unset_field, false));
+	WriteHeaderField("path", get_escaped_string(path, false));
+	WriteHeaderField("open", Timestamp(0));
 
-	if ( ! (WriteHeaderField("fields", names) &&
-	        WriteHeaderField("types", types)) )
-		return false;
-#else
-		InternalWrite(fd, str.c_str(), str.length());
-
-		WriteHeaderField("writer", this->GetBackendName());
-
-		WriteHeaderField("set_separator", get_escaped_string(set_separator, false));
-		WriteHeaderField("empty_field", get_escaped_string(empty_field, false));
-		WriteHeaderField("unset_field", get_escaped_string(unset_field, false));
-		WriteHeaderField("path", get_escaped_string(path, false));
-		WriteHeaderField("open", Timestamp(0));
-
-		WriteHeaderField("fields", names);
-		WriteHeaderField("types", types);
-#endif
+	WriteHeaderField("fields", names);
+	WriteHeaderField("types", types);
 	}
 
 bool Ascii_Batch::DoFlush(double network_time)
@@ -422,13 +388,8 @@ void Ascii_Batch::WriteOneRecord(threading::Value** vals)
 	{
 	desc.Clear();
 
-#if OLD
 	if ( ! formatter->Describe(&desc, NumFields(), Fields(), vals) )
-		return false;
-#else
-		if ( ! formatter->Describe(&desc, NumFields(), Fields(), vals) )
-			throw_non_fatal_writer_error("Couldn't format the log record's values");
-#endif
+		throw_non_fatal_writer_error("Couldn't format the log record's values");
 
 	desc.AddRaw("\n", 1);
 
@@ -441,29 +402,13 @@ void Ascii_Batch::WriteOneRecord(threading::Value** vals)
 		char hex[4] = {'\\', 'x', '0', '0'};
 		bytetohex(bytes[0], hex + 2);
 
-#if OLD
-		if ( ! InternalWrite(fd, hex, 4) )
-			goto write_error;
-#else
 			InternalWrite(fd, hex, 4);
-#endif
 
 		++bytes;
 		--len;
 		}
 
-#if OLD
-	if ( ! InternalWrite(fd, bytes, len) )
-		goto write_error;
-#else
-		InternalWrite(fd, bytes, len);
-#endif
-
-#if OLD
-write_error:
-	Error(Fmt("error writing to %s: %s", fname.c_str(), Strerror(errno)));
-	return false;
-#endif
+	InternalWrite(fd, bytes, len);
 	}
 
 

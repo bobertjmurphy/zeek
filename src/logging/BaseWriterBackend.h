@@ -252,15 +252,10 @@ public:
      */
     bool FinishedRotation();
 
-#if OLD
-    // Overridden from MsgThread - these call Heartbeat() and DoFinish()
-    // in the subclasses
-	bool OnHeartbeat(double network_time, double current_time) override;
-    bool OnFinish(double network_time) override;
-#else
-    // Overridden from MsgThread - calls DoHeartbeat() in the sublcasses
+    /**
+     * Overridden from MsgThread - calls DoHeartbeat() in the sublcasses.
+     */
 	bool OnHeartbeat(double network_time, double current_time) override final;
-#endif
 
 	/**
 	 * Gets a configuration string, using this order of precedence in case

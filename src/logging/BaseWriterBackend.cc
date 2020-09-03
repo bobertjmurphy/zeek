@@ -319,16 +319,6 @@ bool BaseWriterBackend::Flush(double network_time)
     return true;
     }
 
-#if OLD
-bool BaseWriterBackend::OnFinish(double network_time)
-    {
-    if ( Failed() )
-        return true;
-
-    return DoFinish(network_time);		// Implemented by the writers
-    }
-#endif // OLD
-
 bool BaseWriterBackend::OnHeartbeat(double network_time, double current_time)
     {
     if ( Failed() )
