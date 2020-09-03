@@ -7,7 +7,6 @@
 #include "BaseWriterBackend.h"
 
 #include <vector>
-#include <deque>
 
 namespace logging  {
 
@@ -48,9 +47,9 @@ public:
 protected:
     
     /**
-     * A FIFO queue for caching and transmitting a sequence of log records. 
+     * A FIFO queue for caching and transmitting a sequence of log records.
      */
-    typedef std::deque<threading::Value**> LogRecordBatch;
+    typedef std::vector<threading::Value**> LogRecordBatch;
     
     /**
      * Batch writers use this struct to report a problem that prevented sending a contiguous range
@@ -61,7 +60,7 @@ protected:
         /**
          * Constructor for creating a WriteErrorInfo in one line
          */
-        WriteErrorInfo(size_t idx, size_t cnt, const std::string& desc, bool fatal = false) :
+        WriteErrorInfo(size_t idx, size_t cnt, const std::string& desc, bool fatal) :
             first_record_index(idx), record_count(cnt), description(desc), is_fatal(fatal)
             {
             }

@@ -467,35 +467,44 @@ write_error:
 	}
 
 
-logging::BatchWriterBackend::WriteErrorInfoVector Ascii_Batch::BatchWrite(const LogRecordBatch &records_to_writes)
+logging::BatchWriterBackend::WriteErrorInfoVector Ascii_Batch::BatchWrite(const LogRecordBatch &records_to_write)
 {
-	UNIMPLEMENTED
-	
-#if BOBERT
     
     // Initialize the write for this batch
 	if ( ! fd )
 		DoInit(Info(), NumFields(), Fields());
     
-    // Walk the values to be written
+    // Write the log records in this batch
 	WriteErrorInfoVector errors;
-	size_t record_count = records_to_writes.size();
-	LogRecordBatch::iterator itr = records_to_writes.begin();
+	size_t record_count = records_to_write.size();
+	LogRecordBatch::const_iterator itr = records_to_write.begin();
 	for (size_t i = 0; i < record_count; ++i, ++itr) {
+		// Try to write this log record, and record any fatal or non-fatal errors
 		try {
 			WriteOneRecord(*itr);
 		}
-		catch (std::runtime_error e) {
-			UNIMPLEMENTED
+		catch (fatal_writer_error e) {
+			errors.emplace_back(i, 1, e.what(), true);
+		}
+		catch (non_fatal_writer_error e) {
+			errors.emplace_back(i, 1, e.what(), false);
+		}
+		
+		// If there was an error, don't write any remaining records
+		if (!errors.empty()) {
+			size_t next_record_index = i + 1;
+			if (next_record_index < record_count) {
+				errors.emplace_back(next_record_index, record_count - next_record_index,
+									"Not written due to previous error", false);
+			}
 		}
 	}
     
     // Wrap up and report any errors
 	if ( ! IsBuf() )
 		fsync(fd);
-#endif // BOBERT
     
-    return {};
+    return errors;
 }
 
 
