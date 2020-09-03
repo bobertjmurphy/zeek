@@ -324,9 +324,8 @@ bool Ascii_Batch::DoInit(const WriterInfo& info, int num_fields, const Field* co
 
 void Ascii_Batch::WriteHeader(const string& path)
 	{
-#if BOBERT
 	if ( ! include_meta )
-		return true;
+		return;
 
 	string names;
 	string types;
@@ -347,10 +346,15 @@ void Ascii_Batch::WriteHeader(const string& path)
 		{
 		// A single TSV-style line is all we need.
 		string str = names + "\n";
+#if OLD
 		if ( ! InternalWrite(fd, str.c_str(), str.length()) )
 			return false;
 
 		return true;
+#else
+			InternalWrite(fd, str.c_str(), str.length());
+			return;
+#endif
 		}
 
 	string str = meta_prefix
@@ -358,6 +362,7 @@ void Ascii_Batch::WriteHeader(const string& path)
 		+ get_escaped_string(separator, false)
 		+ "\n";
 
+#if OLD
 	if ( ! InternalWrite(fd, str.c_str(), str.length()) )
 		return false;
 
@@ -374,7 +379,20 @@ void Ascii_Batch::WriteHeader(const string& path)
 	if ( ! (WriteHeaderField("fields", names) &&
 	        WriteHeaderField("types", types)) )
 		return false;
-#endif // BOBERT
+#else
+		InternalWrite(fd, str.c_str(), str.length());
+
+		WriteHeaderField("writer", this->GetBackendName());
+
+		WriteHeaderField("set_separator", get_escaped_string(set_separator, false));
+		WriteHeaderField("empty_field", get_escaped_string(empty_field, false));
+		WriteHeaderField("unset_field", get_escaped_string(unset_field, false));
+		WriteHeaderField("path", get_escaped_string(path, false));
+		WriteHeaderField("open", Timestamp(0));
+
+		WriteHeaderField("fields", names);
+		WriteHeaderField("types", types);
+#endif
 	}
 
 bool Ascii_Batch::DoFlush(double network_time)
