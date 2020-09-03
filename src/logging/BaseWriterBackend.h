@@ -438,9 +438,6 @@ class BaseWriterBackend : public threading::MsgThread
 		 */
 		virtual void SendStats() const;
 
-		// This is updated by the batching and non-batching writer backend
-		// subclasses
-		size_t items_successfully_written = 0;
 
 		/**
 		 * Regularly triggered for execution in the child thread.
@@ -456,6 +453,60 @@ class BaseWriterBackend : public threading::MsgThread
 		virtual bool RunHeartbeat(double network_time, double current_time) = 0;
 
 		virtual BaseWriterBackend::WriterInfo::config_map GetDefaultConfigMap() const;
+
+		/**
+		 * A FIFO queue for caching and transmitting a sequence of log records.
+		 */
+		typedef std::vector<threading::Value**> LogRecordBatch;
+
+		/**
+		 * Batch writers use this struct to report a problem that prevented sending a contiguous range
+		 * of log records.
+		 */
+		struct WriteErrorInfo
+			{
+			/**
+			 * Constructor for creating a WriteErrorInfo in one line
+			 */
+			WriteErrorInfo(size_t idx, size_t cnt, const std::string& desc, bool fatal) :
+				first_record_index(idx), record_count(cnt), description(desc), is_fatal(fatal)
+				{
+				}
+
+			/**
+			 * The index of the first record in the range to which the description applies.
+			 */
+			size_t first_record_index;
+
+			/**
+			 * The number of the reecords in the range to which the description applies.
+			 */
+			size_t record_count;
+
+			/**
+			 * A text description of the problem. This may be logged, reported to an administrator,
+			 * etc.
+			 */
+			std::string description;
+
+			/**
+			 * If this is false, the writer should continue running. If this is true, the writer
+			 * will be shut down.
+			 */
+			bool is_fatal;
+			};
+
+		/**
+		 * Batch writers use this to report problems sending zero or more ranges of log records.
+		 */
+		typedef std::vector<WriteErrorInfo> WriteErrorInfoVector;
+
+		/**
+		 * Batch writers call this to report errors when writing log records.
+		 *
+		 * @return true on no fatal errors, false on a fatal error.
+		 */
+		bool HandleWriteErrors(const LogRecordBatch& records, const WriteErrorInfoVector& errors) const;
 
 	private:
 
@@ -476,6 +527,10 @@ class BaseWriterBackend : public threading::MsgThread
 		// which is const
 		mutable BaseWriterBackend::WriterInfo::config_map m_default_config_map;
 		mutable bool m_default_config_map_inited;
+
+
+		// Statistics
+		size_t logs_successfully_written = 0;
 	};
 
 

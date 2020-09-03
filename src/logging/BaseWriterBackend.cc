@@ -395,3 +395,20 @@ void BaseWriterBackend::SendStats() const
 	{
 	/// \todo Send something here
 	}
+
+bool BaseWriterBackend::HandleWriteErrors(const LogRecordBatch& records,
+        const WriteErrorInfoVector& errors) const
+	{
+	bool has_fatal_errors = false;
+	for (const WriteErrorInfo& this_error: errors)
+		{
+		// Report any errors
+		UNIMPLEMENTED
+
+		// Note any fatal errors
+		has_fatal_errors |= this_error.is_fatal;
+		}
+
+	bool no_fatal_errors = !has_fatal_errors;
+	return no_fatal_errors;
+	}

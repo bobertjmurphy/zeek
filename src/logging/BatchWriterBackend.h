@@ -53,55 +53,6 @@ class BatchWriterBackend : public BaseWriterBackend
 	protected:
 
 		/**
-		 * A FIFO queue for caching and transmitting a sequence of log records.
-		 */
-		typedef std::vector<threading::Value**> LogRecordBatch;
-
-		/**
-		 * Batch writers use this struct to report a problem that prevented sending a contiguous range
-		 * of log records.
-		 */
-		struct WriteErrorInfo
-			{
-			/**
-			 * Constructor for creating a WriteErrorInfo in one line
-			 */
-			WriteErrorInfo(size_t idx, size_t cnt, const std::string& desc, bool fatal) :
-				first_record_index(idx), record_count(cnt), description(desc), is_fatal(fatal)
-				{
-				}
-
-			/**
-			 * The index of the first record in the range to which the description applies.
-			 */
-			size_t first_record_index;
-
-			/**
-			 * The number of the reecords in the range to which the description applies.
-			 */
-			size_t record_count;
-
-			/**
-			 * A text description of the problem. This may be logged, reported to an administrator,
-			 * etc.
-			 */
-			std::string description;
-
-			/**
-			 * If this is false, the writer should continue running. If this is true, the writer
-			 * will be shut down.
-			 */
-			bool is_fatal;
-			};
-
-		/**
-		 * Batch writers use this to report problems sending zero or more ranges of log records.
-		 */
-		typedef std::vector<WriteErrorInfo> WriteErrorInfoVector;
-
-
-
-		/**
 		 * Writer-specific output method implementing recording of zero or more log
 		 * entry.
 		 *

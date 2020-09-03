@@ -138,18 +138,10 @@ bool logging::BatchWriterBackend::WriteBatchIfNeeded(bool force_write)
 	WriteErrorInfoVector errors = BatchWrite(m_cached_log_records);
 
 	// Analyze any reported errors
-	bool has_fatal_errors = false;
-	for (const WriteErrorInfo& this_error: errors)
-		{
-		// Report any errors
-		UNIMPLEMENTED
-
-		// Note any fatal errors
-		has_fatal_errors |= this_error.is_fatal;
-		}
+	bool no_fatal_errors = HandleWriteErrors(m_cached_log_records, errors);
 
 	// Clear the cache and return
 	size_t cached_record_count = m_cached_log_records.size();
 	DeleteCachedLogRecords(0, cached_record_count);
-	return !has_fatal_errors;
+	return no_fatal_errors;
 	}
