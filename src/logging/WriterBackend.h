@@ -34,6 +34,10 @@ public:
      */
     explicit WriterBackend(WriterFrontend* frontend);
 
+	/**
+	 * Indicates the thread should finish its operations. Calls DoFinish() in the subclasses
+	 */
+	bool OnFinish(double network_time) override;
         
 protected:
     

@@ -24,6 +24,17 @@ logging::BatchWriterBackend::~BatchWriterBackend()
 	DeleteCachedLogRecords(0, cached_record_count);
 }
 
+bool logging::BatchWriterBackend::OnFinish(double network_time)
+{
+	if ( Failed() )
+		return true;
+	
+	// Force-write any remaining records
+	WriteBatchIfNeeded(true);
+
+	return DoFinish(network_time);		// Implemented by the writers
+}
+
 logging::BaseWriterBackend::WriterInfo::config_map logging::BatchWriterBackend::GetDefaultConfigMap() const
 	{
 		// Start off with this class's default values
@@ -55,15 +66,15 @@ bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*
 		delete [] vals;
 	}
 	
-	// If needed, write a batch
-	bool no_fatal_errors = WriteBatchIfNeeded();
+	// If needed, write a batch, without forcing it
+	bool no_fatal_errors = WriteBatchIfNeeded(false);
 	return no_fatal_errors;
 }
 
 bool logging::BatchWriterBackend::RunHeartbeat(double network_time, double current_time)
     {
-	// If needed, write a batch
-	bool no_fatal_errors = WriteBatchIfNeeded();
+	// If needed, write a batch, without forcing it
+	bool no_fatal_errors = WriteBatchIfNeeded(false);
 	return no_fatal_errors;
     }
 
@@ -84,7 +95,7 @@ void logging::BatchWriterBackend::DeleteCachedLogRecords(size_t first_index, siz
 		
 		// Delete the vals associated with the pointers to the records
 		int num_fields = this->NumFields();
-		for (size_t j = first_index; j <= after_last_index; ++j) {
+		for (size_t j = first_index; j < after_last_index; ++j) {
 			for ( int i = 0; i < num_fields; i++ )
 				delete m_cached_log_records[j][i];
 
@@ -97,7 +108,7 @@ void logging::BatchWriterBackend::DeleteCachedLogRecords(size_t first_index, siz
 	}
 
 
-bool logging::BatchWriterBackend::WriteBatchIfNeeded()
+bool logging::BatchWriterBackend::WriteBatchIfNeeded(bool force_write)
 	{
 		// Don't write anything if nothing is cached
 		if (m_cached_log_records.empty()) {
@@ -105,8 +116,8 @@ bool logging::BatchWriterBackend::WriteBatchIfNeeded()
 		}
 		
 		// Don't write if the write criteria haven't been met
-		bool write_batch = false;
-		if (m_max_batch_records != 0) {
+		bool write_batch = force_write;
+		if (!write_batch && m_max_batch_records != 0) {
 			size_t record_count = m_cached_log_records.size();
 			write_batch = (record_count >= m_max_batch_records);
 		}
@@ -126,7 +137,7 @@ bool logging::BatchWriterBackend::WriteBatchIfNeeded()
 		bool has_fatal_errors = false;
 		for (const WriteErrorInfo& this_error: errors) {
 			// Report any errors
-			/// \todo Report the record count and description
+			UNIMPLEMENTED
 			
 			// Note any fatal errors
 			has_fatal_errors |= this_error.is_fatal;

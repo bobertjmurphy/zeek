@@ -14,6 +14,13 @@ logging::WriterBackend::WriterBackend(WriterFrontend* arg_frontend) : BaseWriter
 {
 }
 
+bool logging::WriterBackend::OnFinish(double network_time)
+{
+if ( Failed() )
+	return true;
+
+return DoFinish(network_time);		// Implemented by the writers
+}
 
 bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
 {

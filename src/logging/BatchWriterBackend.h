@@ -43,6 +43,11 @@ public:
      */
     ~BatchWriterBackend() override;
 
+	/**
+     * Indicates the thread should finish its operations. Calls DoFinish() in the subclasses
+     */
+    bool OnFinish(double network_time) override;
+
         
 protected:
     
@@ -209,7 +214,7 @@ private:
     /** 
      * If the batch transmission criteria have been met, send all cached records at once
      */
-    bool WriteBatchIfNeeded();
+    bool WriteBatchIfNeeded(bool force_write);
 	
     /** 
      * The time the first record currently in the cache was added.
