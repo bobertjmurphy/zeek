@@ -17,6 +17,8 @@ using threading::Field;
 namespace logging
 {
 
+#pragma mark - Messages
+
 class RotationFinishedMessage : public threading::OutputMessage<WriterFrontend>
 	{
 	public:
@@ -72,9 +74,57 @@ class DisableMessage : public threading::OutputMessage<WriterFrontend>
 			}
 	};
 
+class SendEventMessage : public threading::OutputMessage<BaseWriterBackend> {
+public:
+	SendEventMessage(BaseWriterBackend* writer, const char* name, const int num_vals, Value* *val)
+		: threading::OutputMessage<BaseWriterBackend>("WriterError", writer),
+		name(copy_string(name)), num_vals(num_vals), val(val) {}
+
+	virtual ~SendEventMessage()	{ delete [] name; }
+
+	virtual bool Process()
+		{
+		bool success = log_mgr->SendEvent(Object(), name, num_vals, val);
+
+		if ( ! success )
+			reporter->Error("SendEvent for event %s failed", name);
+
+		return true; // We do not want to die if sendEvent fails because the event did not return.
+		}
+
+private:
+	const char* name;
+	const int num_vals;
+	Value* *val;
+};
+
+#if BOBERT
+class WriterStatsMessage : public threading::OutputMessage<WriterFrontend>
+{
+public:
+	enum Type {
+		INFO, WARNING, ERROR
+	};
+
+	ReaderErrorMessage(ReaderFrontend* reader, Type arg_type, const char* arg_msg)
+		: threading::OutputMessage<ReaderFrontend>("ReaderErrorMessage", reader)
+		{ type = arg_type; msg = copy_string(arg_msg); }
+
+	virtual ~ReaderErrorMessage() 	 { delete [] msg; }
+
+	virtual bool Process();
+
+private:
+	const char* msg;
+	Type type;
+};
+#endif // BOBERT
+
 }
 
 // Backend methods.
+
+#pragma mark - BaseWriterBackend
 
 using namespace logging;
 
@@ -430,5 +480,7 @@ bool BaseWriterBackend::HandleWriteErrors(size_t error_log_index, size_t num_wri
 		                    "Not written due to previous error", false);
 		}
 
-	HandleWriteErrors(record_batch, errors);
+	bool no_fatal_errors = HandleWriteErrors(record_batch, errors);
+		
+		return no_fatal_errors;
 	}

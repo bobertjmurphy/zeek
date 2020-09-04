@@ -1587,3 +1587,85 @@ bool Manager::FinishedRotation(WriterFrontend* writer, const char* new_name, con
 
 	return result;
 	}
+
+
+// Raise everything in here as warnings so it is passed to scriptland without
+// looking "fatal". In addition to these warnings, ReaderBackend will queue
+// one reporter message.
+bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int num_vals, threading::Value* *vals) const
+	{
+	// Need to get from writer to an EnumVal that we can pass to FindStream
+		
+#if BOBERT
+	Stream *i = FindStream(reader);
+	if ( i == 0 )
+		{
+		reporter->InternalWarning("Unknown reader %s in SendEvent for event %s", reader->Name(), name.c_str());
+		delete_value_ptr_array(vals, num_vals);
+		return false;
+		}
+#else
+		Stream *i = nullptr;	
+#endif
+
+	EventHandler* handler = event_registry->Lookup(name);
+	if ( handler == 0 )
+		{
+#if BOBERT
+		Warning(i, "Event %s not found", name.c_str());
+		delete_value_ptr_array(vals, num_vals);
+#endif
+		return false;
+		}
+
+#ifdef DEBUG
+	DBG_LOG(DBG_INPUT, "SendEvent for event %s with %d vals",
+		name.c_str(), num_vals);
+#endif
+
+	RecordType *type = handler->FType()->Args();
+	int num_event_vals = type->NumFields();
+	if ( num_vals != num_event_vals )
+		{
+#if BOBERT
+		Warning(i, "Wrong number of values for event %s", name.c_str());
+		delete_value_ptr_array(vals, num_vals);
+#endif
+		return false;
+		}
+
+	bool convert_error = false;
+
+	val_list vl(num_vals);
+
+	for ( int j = 0; j < num_vals; j++)
+		{
+#if BOBERT
+		Val* v = ValueToVal(i, vals[j], convert_error);
+#else
+			Val* v = nullptr;
+#endif
+		vl.push_back(v);
+		if ( v && ! convert_error && ! same_type(type->FieldType(j), v->Type()) )
+			{
+			convert_error = true;
+			type->FieldType(j)->Error("SendEvent types do not match", v->Type());
+			}
+		}
+
+#if BOBERT
+	delete_value_ptr_array(vals, num_vals);
+#endif
+
+	if ( convert_error )
+		{
+		for ( const auto& v : vl )
+			Unref(v);
+
+		return false;
+		}
+	else
+		mgr.QueueEvent(handler, std::move(vl), SOURCE_LOCAL);
+
+	return true;
+}

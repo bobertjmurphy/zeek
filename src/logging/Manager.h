@@ -236,6 +236,7 @@ class Manager : public plugin::ComponentManager<Tag, Component>
 		friend class RotationFinishedMessage;
 		friend class RotationFailedMessage;
 		friend class ::RotationTimer;
+		friend class SendEventMessage;
 
 		// Instantiates a new BaseWriterBackend of the given type (note that
 		// doing so creates a new thread!).
@@ -254,6 +255,11 @@ class Manager : public plugin::ComponentManager<Tag, Component>
 
 		// Deletes the values as passed into Write().
 		void DeleteVals(int num_fields, threading::Value** vals);
+
+		// Allows writers to directly send Bro events. The num_vals and vals
+		// must be the same the named event expects. Takes ownership of
+		// threading::Value fields.
+		bool SendEvent(BaseWriterBackend* writer, const string& name, const int num_vals, threading::Value* *vals) const;
 
 	private:
 		struct Filter;
