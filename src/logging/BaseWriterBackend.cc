@@ -412,3 +412,23 @@ bool BaseWriterBackend::HandleWriteErrors(const LogRecordBatch& records,
 	bool no_fatal_errors = !has_fatal_errors;
 	return no_fatal_errors;
 	}
+
+bool BaseWriterBackend::HandleWriteErrors(size_t error_log_index, size_t num_writes,
+        threading::Value*** vals) const
+	{
+	if (num_writes == 0) 		// No fatal errors
+		return true;
+
+	LogRecordBatch record_batch(vals, vals + num_writes);
+
+	WriteErrorInfoVector errors;
+	errors.emplace_back(error_log_index, 1, "Write error", false);
+	size_t next_record_index = error_log_index + 1;
+	if (next_record_index < num_writes)
+		{
+		errors.emplace_back(next_record_index, num_writes - next_record_index,
+		                    "Not written due to previous error", false);
+		}
+
+	HandleWriteErrors(record_batch, errors);
+	}

@@ -502,6 +502,13 @@ class BaseWriterBackend : public threading::MsgThread
 		typedef std::vector<WriteErrorInfo> WriteErrorInfoVector;
 
 		/**
+		 * Non-batch writers call this to report errors when writing log records.
+		 *
+		 * @return true on no fatal errors, false on a fatal error.
+		 */
+		bool HandleWriteErrors(size_t error_log_index, size_t num_writes, threading::Value*** vals) const;
+
+		/**
 		 * Batch writers call this to report errors when writing log records.
 		 *
 		 * @return true on no fatal errors, false on a fatal error.

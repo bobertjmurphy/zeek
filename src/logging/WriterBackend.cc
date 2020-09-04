@@ -36,23 +36,23 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
 	assert(num_fields > 0 && fields != nullptr);
 
 	// Repeatedly call DoWrite()
-	int num_written = 0;
-	bool success = true;
-	for ( int j = 0; j < num_writes && success; j++ )
+	bool no_fatal_errors = true;
+	for ( int j = 0; j < num_writes; j++ )
 		{
 		// Try to write to the normal destination
-		success = DoWrite(num_fields, fields, vals[j]);
+		bool success = DoWrite(num_fields, fields, vals[j]);
 
+		// Handle any failures
 		if ( ! success )
+			{
+			no_fatal_errors = HandleWriteErrors(j, num_writes, vals);
 			break;
-
-		num_written++;
+			}
 		}
 
 	// Delete vals
 	DeleteVals(num_writes, vals);
 
-	bool no_fatal_errors = (num_writes == num_written);
 	return no_fatal_errors;
 	}
 
