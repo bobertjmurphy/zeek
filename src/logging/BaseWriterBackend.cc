@@ -250,15 +250,9 @@ void BaseWriterBackend::VaSendEvent(const char* event_name, size_t num_vals, ...
 
 	va_list lP;
 	va_start(lP, num_vals);
-#if OLD
-	for ( int i = 0; i < num_vals; i++ )
-		value_vector.push_back(va_arg(lP, Val*));
-#else
 	Val* first_val_ptr = va_arg(lP, Val*);
 	Val** first_val_address = &first_val_ptr;
 	value_vector.insert(value_vector.begin(), first_val_address, first_val_address + num_vals);
-#endif
-
 	va_end(lP);
 
 	SendEvent(event_name, value_vector);
