@@ -1602,17 +1602,8 @@ bool Manager::FinishedRotation(WriterFrontend* writer, const char* new_name, con
 // one reporter message.
 bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int num_vals, threading::Value* *vals) const
 	{
-
-#if BOBERT
-	Stream *i = FindStream(reader);
-	if ( i == 0 )
-		{
-		reporter->InternalWarning("Unknown reader %s in SendEvent for event %s", reader->Name(), name.c_str());
-		delete_value_ptr_array(vals, num_vals);
-		return false;
-		}
-#else
 	assert(writer != nullptr);
+
 	const WriterFrontend* frontend = writer->frontend;
 	assert(frontend != nullptr);
 	EnumVal* stream_id = frontend->stream;
@@ -1623,15 +1614,12 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int
 		delete_value_ptr_array(vals, num_vals);
 		return false;
 		}
-#endif
 
 	EventHandler* handler = event_registry->Lookup(name);
 	if ( handler == 0 )
 		{
-#if BOBERT
 		Warning(i, "Event %s not found", name.c_str());
 		delete_value_ptr_array(vals, num_vals);
-#endif
 		return false;
 		}
 
@@ -1644,10 +1632,8 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int
 	int num_event_vals = type->NumFields();
 	if ( num_vals != num_event_vals )
 		{
-#if BOBERT
 		Warning(i, "Wrong number of values for event %s", name.c_str());
 		delete_value_ptr_array(vals, num_vals);
-#endif
 		return false;
 		}
 
