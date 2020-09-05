@@ -295,6 +295,13 @@ class BaseWriterBackend : public threading::MsgThread
 		 */
 		std::string GetBackendName() const;
 
+		/**
+		 * Gets a recognizable name for the frontend and backend. For example, for
+		 * for packet_filter/Log::WRITER_ASCII, that would be
+		 * "packet_filter:ascii".
+		 */
+		std::string FullName() const;
+
 		// Let the compiler know that we are aware that there is a virtual
 		// info function in the base.
 		using MsgThread::Info;
@@ -402,8 +409,6 @@ class BaseWriterBackend : public threading::MsgThread
 		 * nothing.
 		 */
 		virtual bool DoHeartbeat(double network_time, double current_time) = 0;
-
-	protected:
 
 		/**
 		 * Perform a "low-level" write request that actually tries to write one or
@@ -516,6 +521,7 @@ class BaseWriterBackend : public threading::MsgThread
 		bool HandleWriteErrors(const LogRecordBatch& records, const WriteErrorInfoVector& errors) const;
 
 	private:
+		friend class Manager;
 
 		// Frontend that instantiated us. This object must not be access from
 		// this class, it's running in a different thread!

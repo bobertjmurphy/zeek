@@ -25,6 +25,14 @@
 
 #include <broker/endpoint_info.hh>
 
+static void delete_value_ptr_array(threading::Value** vals, int num_fields)
+	{
+	for ( int i = 0; i < num_fields; ++i )
+		delete vals[i];
+
+	delete [] vals;
+	}
+
 using namespace logging;
 
 struct Manager::Filter
@@ -158,7 +166,7 @@ BaseWriterBackend* Manager::CreateBackend(WriterFrontend* frontend, EnumVal* tag
 	return backend;
 	}
 
-Manager::Stream* Manager::FindStream(EnumVal* id)
+Manager::Stream* Manager::FindStream(EnumVal* id) const
 	{
 	unsigned int idx = id->AsEnum();
 
@@ -1594,8 +1602,7 @@ bool Manager::FinishedRotation(WriterFrontend* writer, const char* new_name, con
 // one reporter message.
 bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int num_vals, threading::Value* *vals) const
 	{
-	// Need to get from writer to an EnumVal that we can pass to FindStream
-		
+
 #if BOBERT
 	Stream *i = FindStream(reader);
 	if ( i == 0 )
@@ -1605,7 +1612,17 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int
 		return false;
 		}
 #else
-		Stream *i = nullptr;	
+	assert(writer != nullptr);
+	const WriterFrontend* frontend = writer->frontend;
+	assert(frontend != nullptr);
+	EnumVal* stream_id = frontend->stream;
+	Stream* i = FindStream(stream_id);
+	if ( i == 0 )
+		{
+		reporter->InternalWarning("Unknown writer %s in SendEvent for event %s", writer->FullName().c_str(), name.c_str());
+		delete_value_ptr_array(vals, num_vals);
+		return false;
+		}
 #endif
 
 	EventHandler* handler = event_registry->Lookup(name);
@@ -1620,7 +1637,7 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int
 
 #ifdef DEBUG
 	DBG_LOG(DBG_INPUT, "SendEvent for event %s with %d vals",
-		name.c_str(), num_vals);
+	        name.c_str(), num_vals);
 #endif
 
 	RecordType *type = handler->FType()->Args();
@@ -1643,7 +1660,7 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int
 #if BOBERT
 		Val* v = ValueToVal(i, vals[j], convert_error);
 #else
-			Val* v = nullptr;
+		Val* v = nullptr;
 #endif
 		vl.push_back(v);
 		if ( v && ! convert_error && ! same_type(type->FieldType(j), v->Type()) )
@@ -1653,9 +1670,7 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int
 			}
 		}
 
-#if BOBERT
 	delete_value_ptr_array(vals, num_vals);
-#endif
 
 	if ( convert_error )
 		{
@@ -1668,4 +1683,4 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int
 		mgr.QueueEvent(handler, std::move(vl), SOURCE_LOCAL);
 
 	return true;
-}
+	}

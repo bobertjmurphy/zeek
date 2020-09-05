@@ -74,50 +74,61 @@ class DisableMessage : public threading::OutputMessage<WriterFrontend>
 			}
 	};
 
-class SendEventMessage : public threading::OutputMessage<BaseWriterBackend> {
-public:
-	SendEventMessage(BaseWriterBackend* writer, const char* name, const int num_vals, Value* *val)
-		: threading::OutputMessage<BaseWriterBackend>("WriterError", writer),
-		name(copy_string(name)), num_vals(num_vals), val(val) {}
+class SendEventMessage : public threading::OutputMessage<BaseWriterBackend>
+	{
+	public:
+		SendEventMessage(BaseWriterBackend* writer, const char* name, const int num_vals, Value* *val)
+			: threading::OutputMessage<BaseWriterBackend>("WriterError", writer),
+			  name(copy_string(name)), num_vals(num_vals), val(val) {}
 
-	virtual ~SendEventMessage()	{ delete [] name; }
+		virtual ~SendEventMessage()
+			{
+			delete [] name;
+			}
 
-	virtual bool Process()
-		{
-		bool success = log_mgr->SendEvent(Object(), name, num_vals, val);
+		virtual bool Process()
+			{
+			bool success = log_mgr->SendEvent(Object(), name, num_vals, val);
 
-		if ( ! success )
-			reporter->Error("SendEvent for event %s failed", name);
+			if ( ! success )
+				reporter->Error("SendEvent for event %s failed", name);
 
-		return true; // We do not want to die if sendEvent fails because the event did not return.
-		}
+			return true; // We do not want to die if sendEvent fails because the event did not return.
+			}
 
-private:
-	const char* name;
-	const int num_vals;
-	Value* *val;
-};
+	private:
+		const char* name;
+		const int num_vals;
+		Value* *val;
+	};
 
 #if BOBERT
 class WriterStatsMessage : public threading::OutputMessage<WriterFrontend>
-{
-public:
-	enum Type {
-		INFO, WARNING, ERROR
+	{
+	public:
+		enum Type
+			{
+			INFO, WARNING, ERROR
+			};
+
+		ReaderErrorMessage(ReaderFrontend* reader, Type arg_type, const char* arg_msg)
+			: threading::OutputMessage<ReaderFrontend>("ReaderErrorMessage", reader)
+			{
+			type = arg_type;
+			msg = copy_string(arg_msg);
+			}
+
+		virtual ~ReaderErrorMessage()
+			{
+			delete [] msg;
+			}
+
+		virtual bool Process();
+
+	private:
+		const char* msg;
+		Type type;
 	};
-
-	ReaderErrorMessage(ReaderFrontend* reader, Type arg_type, const char* arg_msg)
-		: threading::OutputMessage<ReaderFrontend>("ReaderErrorMessage", reader)
-		{ type = arg_type; msg = copy_string(arg_msg); }
-
-	virtual ~ReaderErrorMessage() 	 { delete [] msg; }
-
-	virtual bool Process();
-
-private:
-	const char* msg;
-	Type type;
-};
 #endif // BOBERT
 
 }
@@ -441,6 +452,12 @@ std::string BaseWriterBackend::GetBackendName() const
 	return result;
 	}
 
+std::string BaseWriterBackend::FullName() const
+	{
+	std::string result = GetFrontendName() + ":" + GetBackendName();
+	return result;
+	}
+
 void BaseWriterBackend::SendStats() const
 	{
 	/// \todo Send something here
@@ -481,6 +498,6 @@ bool BaseWriterBackend::HandleWriteErrors(size_t error_log_index, size_t num_wri
 		}
 
 	bool no_fatal_errors = HandleWriteErrors(record_batch, errors);
-		
-		return no_fatal_errors;
+
+	return no_fatal_errors;
 	}

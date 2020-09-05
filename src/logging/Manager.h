@@ -273,7 +273,7 @@ class Manager : public plugin::ComponentManager<Tag, Component>
 		                                      RecordVal* columns);
 
 		threading::Value* ValToLogVal(Val* val, BroType* ty = 0);
-		Stream* FindStream(EnumVal* id);
+		Stream* FindStream(EnumVal* id) const;
 		void RemoveDisabledWriters(Stream* stream);
 		void InstallRotationTimer(WriterInfo* winfo);
 		void Rotate(WriterInfo* info);
