@@ -512,14 +512,14 @@ class BaseWriterBackend : public threading::MsgThread
 		 *
 		 * @return true on no fatal errors, false on a fatal error.
 		 */
-		bool HandleWriteErrors(size_t error_log_index, size_t num_writes, threading::Value*** vals) const;
+		bool HandleWriteErrors(size_t error_log_index, size_t num_writes, threading::Value*** vals);
 
 		/**
 		 * Batch writers call this to report errors when writing log records.
 		 *
 		 * @return true on no fatal errors, false on a fatal error.
 		 */
-		bool HandleWriteErrors(const LogRecordBatch& records, const WriteErrorInfoVector& errors) const;
+		bool HandleWriteErrors(const LogRecordBatch& records, const WriteErrorInfoVector& errors);
 
 		/**
 		 * Method allowing a writer to send a specified Zeek event. Vals must
@@ -531,18 +531,6 @@ class BaseWriterBackend : public threading::MsgThread
 		 * @param arg_vals the values to be given to the event
 		 */
 		void SendEvent(const char* event_name, ValPtrVector& arg_vals);
-
-		/**
-		 * Varargs version of SendEvent
-		 *
-		 * @param event_name name of the Zeek event to send
-		 *
-		 * @param num_vals number of entries in list
-		 *
-		 * @param ... a list of Val pointers to be given to the event. Takes ownership of
-		 *            these pointers.
-		 */
-		void VaSendEvent(const char* event_name, size_t num_vals, ...);
 
 	private:
 		friend class Manager;

@@ -78,7 +78,7 @@ class WriterEventMessage : public threading::OutputMessage<BaseWriterBackend>
 	{
 	public:
 		WriterEventMessage(BaseWriterBackend* writer, const char* arg_event_name, const ValPtrVector& arg_vals)
-			: threading::OutputMessage<BaseWriterBackend>("SendEvent", writer),
+			: threading::OutputMessage<BaseWriterBackend>("WriterEvent", writer),
 			  event_name(arg_event_name), vals(arg_vals) {}
 
 		virtual ~WriterEventMessage() { }
@@ -88,7 +88,7 @@ class WriterEventMessage : public threading::OutputMessage<BaseWriterBackend>
 			bool success = log_mgr->SendEvent(Object(), event_name, vals);
 
 			if ( ! success )
-				reporter->Error("SendEvent for event %s failed", event_name.c_str());
+				reporter->Error("Sending WriterEvent for event %s failed", event_name.c_str());
 
 			return true; // We do not want to die if sendEvent fails because the event did not return.
 			}
@@ -211,20 +211,6 @@ void BaseWriterBackend::DeleteVals(int num_writes, Value*** vals)
 void BaseWriterBackend::SendEvent(const char* event_name, ValPtrVector& vals)
 	{
 	SendOut(new WriterEventMessage(this, event_name, vals));
-	}
-
-void BaseWriterBackend::VaSendEvent(const char* event_name, size_t num_vals, ...)
-	{
-	ValPtrVector value_vector;
-
-	va_list lP;
-	va_start(lP, num_vals);
-	Val* first_val_ptr = va_arg(lP, Val*);
-	Val** first_val_address = &first_val_ptr;
-	value_vector.insert(value_vector.begin(), first_val_address, first_val_address + num_vals);
-	va_end(lP);
-
-	SendEvent(event_name, value_vector);
 	}
 
 bool BaseWriterBackend::FinishedRotation(const char* new_name, const char* old_name,
@@ -450,13 +436,22 @@ void BaseWriterBackend::SendStats() const
 	}
 
 bool BaseWriterBackend::HandleWriteErrors(const LogRecordBatch& records,
-        const WriteErrorInfoVector& errors) const
+        const WriteErrorInfoVector& errors)
 	{
 	bool has_fatal_errors = false;
 	for (const WriteErrorInfo& this_error: errors)
 		{
-		// Report any errors
-		UNIMPLEMENTED
+		// Report any errors. The columns are:
+		// 1. Description
+		// 2. Whether the error is fatal
+		// 3. The number of records involved
+		ValPtrVector error_vals =
+			{
+			new StringVal(this_error.description),
+			val_mgr->GetBool(this_error.is_fatal),
+			val_mgr->GetCount(this_error.record_count)
+			};
+		SendEvent("Write error", error_vals);
 
 		// Note any fatal errors
 		has_fatal_errors |= this_error.is_fatal;
@@ -467,7 +462,7 @@ bool BaseWriterBackend::HandleWriteErrors(const LogRecordBatch& records,
 	}
 
 bool BaseWriterBackend::HandleWriteErrors(size_t error_log_index, size_t num_writes,
-        threading::Value*** vals) const
+        threading::Value*** vals)
 	{
 	if (num_writes == 0) 		// No fatal errors
 		return true;
@@ -475,7 +470,7 @@ bool BaseWriterBackend::HandleWriteErrors(size_t error_log_index, size_t num_wri
 	LogRecordBatch record_batch(vals, vals + num_writes);
 
 	WriteErrorInfoVector errors;
-	errors.emplace_back(error_log_index, 1, "Write error", false);
+	errors.emplace_back(error_log_index, 1, "Unspecified", false);
 	size_t next_record_index = error_log_index + 1;
 	if (next_record_index < num_writes)
 		{
