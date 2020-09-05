@@ -276,8 +276,8 @@ class BaseWriterBackend : public threading::MsgThread
 		/**
 		 * Gets a configuration string, using this order of precedence in case
 		 * of overrides:
-		 *  1. Value for a reader-writer combination, set in a bro script
-		 *  2. Value for a reader independent of the writer, set in a bro script
+		 *  1. Value for a reader-writer combination, set in a Zeek script
+		 *  2. Value for a reader independent of the writer, set in a Zeek script
 		 *     May also be a global config value
 		 *  3. Default value from the code
 		 */
@@ -519,6 +519,29 @@ class BaseWriterBackend : public threading::MsgThread
 		 * @return true on no fatal errors, false on a fatal error.
 		 */
 		bool HandleWriteErrors(const LogRecordBatch& records, const WriteErrorInfoVector& errors) const;
+
+		/**
+		 * Method allowing a writer to send a specified Zeek event. Vals must
+		 * match the values expected by the Zeek event.
+		 *
+		 * @param event_name name of the Zeek event to send
+		 *
+		 * @param num_vals number of entries in \a vals
+		 *
+		 * @param vals the values to be given to the event
+		 */
+		void SendEvent(const char* event_name, const int num_vals, threading::Value* *vals);
+
+		/**
+		 * Varargs version of SendEvent
+		 *
+		 * @param event_name name of the Zeek event to send
+		 *
+		 * @param num_vals number of entries in list
+		 *
+		 * @param ... the values to be given to the event
+		 */
+		void VaSendEvent(const char* event_name, const int num_vals, ...);
 
 	private:
 		friend class Manager;

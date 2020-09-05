@@ -241,6 +241,25 @@ void BaseWriterBackend::DeleteVals(int num_writes, Value*** vals)
 	delete [] vals;
 	}
 
+void BaseWriterBackend::SendEvent(const char* event_name, const int num_vals, Value* *vals)
+	{
+	SendOut(new SendEventMessage(this, event_name, num_vals, vals));
+	}
+
+void BaseWriterBackend::VaSendEvent(const char* event_name, const int num_vals, ...)
+	{
+	std::vector<Value*> value_vector(num_vals);
+
+	va_list lP;
+	va_start(lP, num_vals);
+	for ( int i = 0; i < num_vals; i++ )
+		value_vector[i] = va_arg(lP, Value*);
+
+	va_end(lP);
+
+	SendEvent(event_name, num_vals, value_vector.data());
+	}
+
 bool BaseWriterBackend::FinishedRotation(const char* new_name, const char* old_name,
         double open, double close, bool terminating)
 	{
