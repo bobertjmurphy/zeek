@@ -1684,3 +1684,48 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int
 
 	return true;
 	}
+
+void Manager::Warning(const Stream* i, const char* fmt, ...) const
+	{
+	va_list ap;
+	va_start(ap, fmt);
+	ErrorHandler(i, ErrorType::WARNING, true, fmt, ap);
+	va_end(ap);
+	}
+
+void Manager::ErrorHandler(const Stream* i, ErrorType et, bool reporter_send, const char* fmt, va_list ap) const
+	{
+	char* buf;
+
+	int n = vasprintf(&buf, fmt, ap);
+	if ( n < 0 || buf == nullptr )
+		{
+		reporter->InternalError("Could not format error message %s for stream %s", fmt, i->name.c_str());
+		return;
+		}
+
+	/// \todo Send a script level error event
+
+	if ( reporter_send )
+		{
+		switch (et)
+			{
+			case ErrorType::INFO:
+				reporter->Info("%s", buf);
+				break;
+
+			case ErrorType::WARNING:
+				reporter->Warning("%s", buf);
+				break;
+
+			case ErrorType::ERROR:
+				reporter->Error("%s", buf);
+				break;
+
+			default:
+				reporter->InternalError("Unknown error type while trying to report input error %s", fmt);
+			}
+		}
+
+	free(buf);
+	}

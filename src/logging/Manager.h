@@ -281,6 +281,11 @@ class Manager : public plugin::ComponentManager<Tag, Component>
 		bool CompareFields(const Filter* filter, const WriterFrontend* writer);
 		bool CheckFilterWriterConflict(const WriterInfo* winfo, const Filter* filter);
 
+		void Warning(const Stream* i, const char* fmt, ...) const __attribute__((format(printf, 3, 4)));
+
+		enum class ErrorType { INFO, WARNING, ERROR };
+		void ErrorHandler(const Stream* i, ErrorType et, bool reporter_send, const char* fmt, va_list ap) const __attribute__((format(printf, 5, 0)));
+
 		vector<Stream *> streams;	// Indexed by stream enum.
 		int rotations_pending;	// Number of rotations not yet finished.
 	};
