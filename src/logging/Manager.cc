@@ -1687,7 +1687,7 @@ void Manager::ErrorHandler(const Stream* i, ErrorType et, bool reporter_send, co
 		return;
 		}
 
-	/// \todo Send a script level error event
+	/// \todo When writers support error event handlers, send a script level error event
 
 	if ( reporter_send )
 		{
