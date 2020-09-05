@@ -281,6 +281,10 @@ class Manager : public plugin::ComponentManager<Tag, Component>
 		bool CompareFields(const Filter* filter, const WriterFrontend* writer);
 		bool CheckFilterWriterConflict(const WriterInfo* winfo, const Filter* filter);
 
+		// Convert Threading::Value to an internal Bro type just using the information given in the threading::Value.
+		// This allows more flexibility, especially given structures in script-land that contain any types.
+		Val* ValueToVal(const Stream* i, const threading::Value* val, bool& have_error) const;
+
 		void Warning(const Stream* i, const char* fmt, ...) const __attribute__((format(printf, 3, 4)));
 
 		enum class ErrorType { INFO, WARNING, ERROR };

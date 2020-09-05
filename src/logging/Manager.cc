@@ -19,6 +19,7 @@
 #include "Desc.h"
 #include "WriterFrontend.h"
 #include "BaseWriterBackend.h"
+#include "module_util.h"
 #include "logging.bif.h"
 #include "plugin/Plugin.h"
 #include "plugin/Manager.h"
@@ -1643,11 +1644,7 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int
 
 	for ( int j = 0; j < num_vals; j++)
 		{
-#if BOBERT
 		Val* v = ValueToVal(i, vals[j], convert_error);
-#else
-		Val* v = nullptr;
-#endif
 		vl.push_back(v);
 		if ( v && ! convert_error && ! same_type(type->FieldType(j), v->Type()) )
 			{
@@ -1714,4 +1711,207 @@ void Manager::ErrorHandler(const Stream* i, ErrorType et, bool reporter_send, co
 		}
 
 	free(buf);
+	}
+
+
+Val* Manager::ValueToVal(const Stream* i, const threading::Value* val, bool& have_error) const
+	{
+	if ( have_error )
+		return nullptr;
+
+	if ( ! val->present )
+		return nullptr; // unset field
+
+	switch ( val->type )
+		{
+		case TYPE_BOOL:
+			return val_mgr->GetBool(val->val.int_val);
+
+		case TYPE_INT:
+			return val_mgr->GetInt(val->val.int_val);
+
+		case TYPE_COUNT:
+		case TYPE_COUNTER:
+			return val_mgr->GetCount(val->val.int_val);
+
+		case TYPE_DOUBLE:
+		case TYPE_TIME:
+		case TYPE_INTERVAL:
+			return new Val(val->val.double_val, val->type);
+
+		case TYPE_STRING:
+			{
+			BroString *s = new BroString((const u_char*)val->val.string_val.data, val->val.string_val.length, 1);
+			return new StringVal(s);
+			}
+
+		case TYPE_PORT:
+			return val_mgr->GetPort(val->val.port_val.port, val->val.port_val.proto);
+
+		case TYPE_ADDR:
+			{
+			IPAddr* addr = 0;
+			switch ( val->val.addr_val.family )
+				{
+				case IPv4:
+					addr = new IPAddr(val->val.addr_val.in.in4);
+					break;
+
+				case IPv6:
+					addr = new IPAddr(val->val.addr_val.in.in6);
+					break;
+
+				default:
+					assert(false);
+				}
+
+			AddrVal* addrval = new AddrVal(*addr);
+			delete addr;
+			return addrval;
+			}
+
+		case TYPE_SUBNET:
+			{
+			IPAddr* addr = nullptr;
+			switch ( val->val.subnet_val.prefix.family )
+				{
+				case IPv4:
+					addr = new IPAddr(val->val.subnet_val.prefix.in.in4);
+					break;
+
+				case IPv6:
+					addr = new IPAddr(val->val.subnet_val.prefix.in.in6);
+					break;
+
+				default:
+					assert(false);
+				}
+
+			SubNetVal* subnetval = new SubNetVal(*addr, val->val.subnet_val.length);
+			delete addr;
+			return subnetval;
+			}
+
+		case TYPE_PATTERN:
+			{
+			RE_Matcher* re = new RE_Matcher(val->val.pattern_text_val);
+			re->Compile();
+			return new PatternVal(re);
+			}
+
+		case TYPE_TABLE:
+			{
+			TypeList* set_index;
+			if ( val->val.set_val.size == 0 && val->subtype == TYPE_VOID )
+				// don't know type - unspecified table.
+				set_index = new TypeList();
+			else
+				{
+				// all entries have to have the same type...
+				TypeTag stag = val->subtype;
+				if ( stag == TYPE_VOID )
+					TypeTag stag = val->val.set_val.vals[0]->type;
+
+				BroType* index_type;
+
+				if ( stag == TYPE_ENUM )
+					{
+					// Enums are not a base-type, so need to look it up.
+					const auto& sv = val->val.set_val.vals[0]->val.string_val;
+					std::string enum_name(sv.data, sv.length);
+					auto enum_id = global_scope()->Lookup(enum_name);
+
+					if ( ! enum_id )
+						{
+						Warning(i, "Value '%s' for stream '%s' is not a valid enum.",
+						        enum_name.data(), i->name.c_str());
+
+						have_error = true;
+						return nullptr;
+						}
+
+					index_type = enum_id->Type()->AsEnumType();
+					}
+				else
+					index_type = base_type_no_ref(stag);
+
+				set_index = new TypeList(index_type);
+				set_index->Append(index_type->Ref());
+				}
+
+			SetType* s = new SetType(set_index, 0);
+			TableVal* t = new TableVal(s);
+			for ( int j = 0; j < val->val.set_val.size; j++ )
+				{
+				Val* assignval = ValueToVal(i, val->val.set_val.vals[j], have_error);
+
+				t->Assign(assignval, 0);
+				Unref(assignval); // index is not consumed by assign.
+				}
+
+			Unref(s);
+			return t;
+			}
+
+		case TYPE_VECTOR:
+			{
+			BroType* type;
+			if ( val->val.vector_val.size == 0  && val->subtype == TYPE_VOID )
+				// don't know type - unspecified table.
+				type = base_type(TYPE_ANY);
+			else
+				{
+				// all entries have to have the same type...
+				if ( val->subtype == TYPE_VOID )
+					type = base_type(val->val.vector_val.vals[0]->type);
+				else
+					type = base_type(val->subtype);
+				}
+
+			VectorType* vt = new VectorType(type->Ref());
+			VectorVal* v = new VectorVal(vt);
+			for ( int j = 0; j < val->val.vector_val.size; j++ )
+				v->Assign(j, ValueToVal(i, val->val.vector_val.vals[j], have_error));
+
+			Unref(vt);
+			return v;
+			}
+
+		case TYPE_ENUM:
+			{
+			// Convert to string first to not have to deal with missing
+			// \0's...
+			string enum_string(val->val.string_val.data, val->val.string_val.length);
+
+			// let's try looking it up by global ID.
+			ID* id = lookup_ID(enum_string.c_str(), GLOBAL_MODULE_NAME);
+			if ( ! id || ! id->IsEnumConst() )
+				{
+				Warning(i, "Value '%s' for stream '%s' is not a valid enum.",
+				        enum_string.c_str(), i->name.c_str());
+
+				have_error = true;
+				return nullptr;
+				}
+
+			EnumType* t = id->Type()->AsEnumType();
+			int intval = t->Lookup(id->ModuleName(), id->Name());
+			if ( intval < 0 )
+				{
+				Warning(i, "Enum value '%s' for stream '%s' not found.",
+				        enum_string.c_str(), i->name.c_str());
+
+				have_error = true;
+				return nullptr;
+				}
+
+			return t->GetVal(intval);
+			}
+
+		default:
+			reporter->InternalError("Unsupported type for input_read in stream %s", i->name.c_str());
+		}
+
+	assert(false);
+	return NULL;
 	}
