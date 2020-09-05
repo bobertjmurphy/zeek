@@ -7,6 +7,7 @@
 #include "threading/MsgThread.h"
 
 #include "Component.h"
+#include "Val.h"
 
 // Some help with development
 #ifndef NDEBUG
@@ -522,15 +523,14 @@ class BaseWriterBackend : public threading::MsgThread
 
 		/**
 		 * Method allowing a writer to send a specified Zeek event. Vals must
-		 * match the values expected by the Zeek event.
+		 * match the values expected by the Zeek event. Takes ownership of the Val
+		 * pointers contained in arg_vals.
 		 *
 		 * @param event_name name of the Zeek event to send
 		 *
-		 * @param num_vals number of entries in \a vals
-		 *
-		 * @param vals the values to be given to the event
+		 * @param arg_vals the values to be given to the event
 		 */
-		void SendEvent(const char* event_name, const int num_vals, threading::Value* *vals);
+		void SendEvent(const char* event_name, ValPtrVector& arg_vals);
 
 		/**
 		 * Varargs version of SendEvent
@@ -539,9 +539,10 @@ class BaseWriterBackend : public threading::MsgThread
 		 *
 		 * @param num_vals number of entries in list
 		 *
-		 * @param ... the values to be given to the event
+		 * @param ... a list of Val pointers to be given to the event. Takes ownership of
+		 *            these pointers.
 		 */
-		void VaSendEvent(const char* event_name, const int num_vals, ...);
+		void VaSendEvent(const char* event_name, size_t num_vals, ...);
 
 	private:
 		friend class Manager;

@@ -26,6 +26,7 @@
 
 #include <broker/endpoint_info.hh>
 
+#if OLD
 static void delete_value_ptr_array(threading::Value** vals, int num_fields)
 	{
 	for ( int i = 0; i < num_fields; ++i )
@@ -33,6 +34,13 @@ static void delete_value_ptr_array(threading::Value** vals, int num_fields)
 
 	delete [] vals;
 	}
+#else
+static void unref_vals_in_vector(ValPtrVector& vals)
+	{
+	for ( Val* v : vals )
+		Unref(v);
+	}
+#endif
 
 using namespace logging;
 
@@ -1601,7 +1609,7 @@ bool Manager::FinishedRotation(WriterFrontend* writer, const char* new_name, con
 // Raise everything in here as warnings so it is passed to scriptland without
 // looking "fatal". In addition to these warnings, ReaderBackend will queue
 // one reporter message.
-bool Manager::SendEvent(BaseWriterBackend* writer, const string& event_name, const int num_vals, threading::Value* *vals) const
+bool Manager::SendEvent(BaseWriterBackend* writer, const string& event_name, ValPtrVector& arg_vals) const
 	{
 	assert(writer != nullptr);
 
@@ -1612,7 +1620,7 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& event_name, con
 	if ( i == 0 )
 		{
 		reporter->InternalWarning("Unknown writer %s in SendEvent for event %s", writer->FullName().c_str(), event_name.c_str());
-		delete_value_ptr_array(vals, num_vals);
+		unref_vals_in_vector(arg_vals);
 		return false;
 		}
 
@@ -1620,28 +1628,52 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& event_name, con
 	if ( handler == 0 )
 		{
 		Warning(i, "Event %s not found", event_name.c_str());
-		delete_value_ptr_array(vals, num_vals);
+		unref_vals_in_vector(arg_vals);
 		return false;
 		}
 
 #ifdef DEBUG
-	DBG_LOG(DBG_INPUT, "SendEvent for event %s with %d vals",
-	        event_name.c_str(), num_vals);
+	DBG_LOG(DBG_INPUT, "SendEvent for event %s with %zu vals",
+	        event_name.c_str(), arg_vals.size());
 #endif
 
+	// Check the field count
 	RecordType *type = handler->FType()->Args();
 	int num_event_vals = type->NumFields();
-	if ( num_vals != num_event_vals )
+	if ( arg_vals.size() != num_event_vals )
 		{
 		Warning(i, "Wrong number of values for event %s", event_name.c_str());
-		delete_value_ptr_array(vals, num_vals);
+		unref_vals_in_vector(arg_vals);
 		return false;
 		}
 
-	bool convert_error = false;
+	// Check the field types
+	bool type_error = false;
+	for ( size_t j = 0; j < arg_vals.size() && !type_error; j++)
+		{
+		Val* v = arg_vals[j];
+		if ( v && ! same_type(type->FieldType(j), v->Type()) )
+			{
+			type_error = true;
+			type->FieldType(j)->Error("SendEvent types do not match", v->Type());
+			}
+		}
+	if ( type_error )
+		{
+		unref_vals_in_vector(arg_vals);
+		return false;
+		}
 
-	val_list vl(num_vals);
 
+	// At this point, arg_vals has been validated, and the event can be queued.
+
+	// Convert arg_vals to a val_list, which takes ownership of arg_vals's Val pointers
+	//Val ** first_val_ptr = &arg_vals[0];
+	Val ** first_val_ptr = arg_vals.data();
+	val_list vl(first_val_ptr, arg_vals.size());
+
+#if OLD
+#if OLD
 	for ( int j = 0; j < num_vals; j++)
 		{
 		Val* v = ValueToVal(i, vals[j], convert_error);
@@ -1652,8 +1684,20 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& event_name, con
 			type->FieldType(j)->Error("SendEvent types do not match", v->Type());
 			}
 		}
+#else
+	for ( size_t j = 0; j < arg_vals.size(); j++)
+		{
+		Val* v = arg_vals[j];
+		vl.push_back(v);
+		if ( v && ! convert_error && ! same_type(type->FieldType(j), v->Type()) )
+			{
+			convert_error = true;
+			type->FieldType(j)->Error("SendEvent types do not match", v->Type());
+			}
+		}
+#endif
 
-	delete_value_ptr_array(vals, num_vals);
+	unref_vals_in_vector(arg_vals);
 
 	if ( convert_error )
 		{
@@ -1663,6 +1707,7 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& event_name, con
 		return false;
 		}
 	else
+#endif // OLD
 		mgr.QueueEvent(handler, std::move(vl), SOURCE_LOCAL);
 
 	return true;
@@ -1713,7 +1758,7 @@ void Manager::ErrorHandler(const Stream* i, ErrorType et, bool reporter_send, co
 	free(buf);
 	}
 
-
+#if OLD
 Val* Manager::ValueToVal(const Stream* i, const threading::Value* val, bool& have_error) const
 	{
 	if ( have_error )
@@ -1915,3 +1960,4 @@ Val* Manager::ValueToVal(const Stream* i, const threading::Value* val, bool& hav
 	assert(false);
 	return NULL;
 	}
+#endif // OLD

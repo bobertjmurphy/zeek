@@ -258,8 +258,13 @@ class Manager : public plugin::ComponentManager<Tag, Component>
 
 		// Allows writers to directly send Bro events. The num_vals and vals
 		// must be the same the named event expects. Takes ownership of
+#if OLD
 		// threading::Value fields.
 		bool SendEvent(BaseWriterBackend* writer, const string& event_name, const int num_vals, threading::Value* *vals) const;
+#else
+		// the pointers contained in arg_vals.
+		bool SendEvent(BaseWriterBackend* writer, const string& event_name, ValPtrVector& arg_vals) const;
+#endif
 
 	private:
 		struct Filter;
@@ -281,9 +286,11 @@ class Manager : public plugin::ComponentManager<Tag, Component>
 		bool CompareFields(const Filter* filter, const WriterFrontend* writer);
 		bool CheckFilterWriterConflict(const WriterInfo* winfo, const Filter* filter);
 
+#if OLD
 		// Convert Threading::Value to an internal Bro type just using the information given in the threading::Value.
 		// This allows more flexibility, especially given structures in script-land that contain any types.
 		Val* ValueToVal(const Stream* i, const threading::Value* val, bool& have_error) const;
+#endif // OLD
 
 		void Warning(const Stream* i, const char* fmt, ...) const __attribute__((format(printf, 3, 4)));
 

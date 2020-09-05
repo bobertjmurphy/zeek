@@ -77,29 +77,27 @@ class DisableMessage : public threading::OutputMessage<WriterFrontend>
 class SendEventMessage : public threading::OutputMessage<BaseWriterBackend>
 	{
 	public:
-		SendEventMessage(BaseWriterBackend* writer, const char* event_name, const int num_vals, Value* *val)
-			: threading::OutputMessage<BaseWriterBackend>("WriterError", writer),
-			  event_name(copy_string(event_name)), num_vals(num_vals), val(val) {}
+		SendEventMessage(BaseWriterBackend* writer, const char* arg_event_name, const ValPtrVector& arg_vals)
+			: threading::OutputMessage<BaseWriterBackend>("SendEvent", writer),
+			  event_name(arg_event_name), vals(arg_vals) {}
 
 		virtual ~SendEventMessage()
 			{
-			delete [] event_name;
 			}
 
 		virtual bool Process()
 			{
-			bool success = log_mgr->SendEvent(Object(), event_name, num_vals, val);
+			bool success = log_mgr->SendEvent(Object(), event_name, vals);
 
 			if ( ! success )
-				reporter->Error("SendEvent for event %s failed", event_name);
+				reporter->Error("SendEvent for event %s failed", event_name.c_str());
 
 			return true; // We do not want to die if sendEvent fails because the event did not return.
 			}
 
 	private:
-		const char* event_name;
-		const int num_vals;
-		Value* *val;
+		std::string event_name;
+		ValPtrVector vals;
 	};
 
 #if BOBERT
@@ -241,23 +239,29 @@ void BaseWriterBackend::DeleteVals(int num_writes, Value*** vals)
 	delete [] vals;
 	}
 
-void BaseWriterBackend::SendEvent(const char* event_name, const int num_vals, Value* *vals)
+void BaseWriterBackend::SendEvent(const char* event_name, ValPtrVector& vals)
 	{
-	SendOut(new SendEventMessage(this, event_name, num_vals, vals));
+	SendOut(new SendEventMessage(this, event_name, vals));
 	}
 
-void BaseWriterBackend::VaSendEvent(const char* event_name, const int num_vals, ...)
+void BaseWriterBackend::VaSendEvent(const char* event_name, size_t num_vals, ...)
 	{
-	std::vector<Value*> value_vector(num_vals);
+	ValPtrVector value_vector;
 
 	va_list lP;
 	va_start(lP, num_vals);
+#if OLD
 	for ( int i = 0; i < num_vals; i++ )
-		value_vector[i] = va_arg(lP, Value*);
+		value_vector.push_back(va_arg(lP, Val*));
+#else
+	Val* first_val_ptr = va_arg(lP, Val*);
+	Val** first_val_address = &first_val_ptr;
+	value_vector.insert(value_vector.begin(), first_val_address, first_val_address + num_vals);
+#endif
 
 	va_end(lP);
 
-	SendEvent(event_name, num_vals, value_vector.data());
+	SendEvent(event_name, value_vector);
 	}
 
 bool BaseWriterBackend::FinishedRotation(const char* new_name, const char* old_name,

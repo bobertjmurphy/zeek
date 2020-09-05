@@ -61,6 +61,8 @@ class VectorVal;
 
 class TableEntryVal;
 
+typedef std::vector<Val*> ValPtrVector;
+
 typedef union {
 	// Used for bool, int, enum.
 	bro_int_t int_val;
