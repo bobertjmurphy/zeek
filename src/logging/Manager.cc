@@ -1601,7 +1601,7 @@ bool Manager::FinishedRotation(WriterFrontend* writer, const char* new_name, con
 // Raise everything in here as warnings so it is passed to scriptland without
 // looking "fatal". In addition to these warnings, ReaderBackend will queue
 // one reporter message.
-bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int num_vals, threading::Value* *vals) const
+bool Manager::SendEvent(BaseWriterBackend* writer, const string& event_name, const int num_vals, threading::Value* *vals) const
 	{
 	assert(writer != nullptr);
 
@@ -1611,29 +1611,29 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& name, const int
 	Stream* i = FindStream(stream_id);
 	if ( i == 0 )
 		{
-		reporter->InternalWarning("Unknown writer %s in SendEvent for event %s", writer->FullName().c_str(), name.c_str());
+		reporter->InternalWarning("Unknown writer %s in SendEvent for event %s", writer->FullName().c_str(), event_name.c_str());
 		delete_value_ptr_array(vals, num_vals);
 		return false;
 		}
 
-	EventHandler* handler = event_registry->Lookup(name);
+	EventHandler* handler = event_registry->Lookup(event_name);
 	if ( handler == 0 )
 		{
-		Warning(i, "Event %s not found", name.c_str());
+		Warning(i, "Event %s not found", event_name.c_str());
 		delete_value_ptr_array(vals, num_vals);
 		return false;
 		}
 
 #ifdef DEBUG
 	DBG_LOG(DBG_INPUT, "SendEvent for event %s with %d vals",
-	        name.c_str(), num_vals);
+	        event_name.c_str(), num_vals);
 #endif
 
 	RecordType *type = handler->FType()->Args();
 	int num_event_vals = type->NumFields();
 	if ( num_vals != num_event_vals )
 		{
-		Warning(i, "Wrong number of values for event %s", name.c_str());
+		Warning(i, "Wrong number of values for event %s", event_name.c_str());
 		delete_value_ptr_array(vals, num_vals);
 		return false;
 		}

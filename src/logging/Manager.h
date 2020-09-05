@@ -259,7 +259,7 @@ class Manager : public plugin::ComponentManager<Tag, Component>
 		// Allows writers to directly send Bro events. The num_vals and vals
 		// must be the same the named event expects. Takes ownership of
 		// threading::Value fields.
-		bool SendEvent(BaseWriterBackend* writer, const string& name, const int num_vals, threading::Value* *vals) const;
+		bool SendEvent(BaseWriterBackend* writer, const string& event_name, const int num_vals, threading::Value* *vals) const;
 
 	private:
 		struct Filter;

@@ -77,27 +77,27 @@ class DisableMessage : public threading::OutputMessage<WriterFrontend>
 class SendEventMessage : public threading::OutputMessage<BaseWriterBackend>
 	{
 	public:
-		SendEventMessage(BaseWriterBackend* writer, const char* name, const int num_vals, Value* *val)
+		SendEventMessage(BaseWriterBackend* writer, const char* event_name, const int num_vals, Value* *val)
 			: threading::OutputMessage<BaseWriterBackend>("WriterError", writer),
-			  name(copy_string(name)), num_vals(num_vals), val(val) {}
+			  event_name(copy_string(event_name)), num_vals(num_vals), val(val) {}
 
 		virtual ~SendEventMessage()
 			{
-			delete [] name;
+			delete [] event_name;
 			}
 
 		virtual bool Process()
 			{
-			bool success = log_mgr->SendEvent(Object(), name, num_vals, val);
+			bool success = log_mgr->SendEvent(Object(), event_name, num_vals, val);
 
 			if ( ! success )
-				reporter->Error("SendEvent for event %s failed", name);
+				reporter->Error("SendEvent for event %s failed", event_name);
 
 			return true; // We do not want to die if sendEvent fails because the event did not return.
 			}
 
 	private:
-		const char* name;
+		const char* event_name;
 		const int num_vals;
 		Value* *val;
 	};
