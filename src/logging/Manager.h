@@ -237,6 +237,7 @@ class Manager : public plugin::ComponentManager<Tag, Component>
 		friend class RotationFailedMessage;
 		friend class ::RotationTimer;
 		friend class SendEventMessage;
+		friend class WriterEventMessage;
 
 		// Instantiates a new BaseWriterBackend of the given type (note that
 		// doing so creates a new thread!).

@@ -74,16 +74,14 @@ class DisableMessage : public threading::OutputMessage<WriterFrontend>
 			}
 	};
 
-class SendEventMessage : public threading::OutputMessage<BaseWriterBackend>
+class WriterEventMessage : public threading::OutputMessage<BaseWriterBackend>
 	{
 	public:
-		SendEventMessage(BaseWriterBackend* writer, const char* arg_event_name, const ValPtrVector& arg_vals)
+		WriterEventMessage(BaseWriterBackend* writer, const char* arg_event_name, const ValPtrVector& arg_vals)
 			: threading::OutputMessage<BaseWriterBackend>("SendEvent", writer),
 			  event_name(arg_event_name), vals(arg_vals) {}
 
-		virtual ~SendEventMessage()
-			{
-			}
+		virtual ~WriterEventMessage() { }
 
 		virtual bool Process()
 			{
@@ -99,35 +97,6 @@ class SendEventMessage : public threading::OutputMessage<BaseWriterBackend>
 		std::string event_name;
 		ValPtrVector vals;
 	};
-
-#if BOBERT
-class WriterStatsMessage : public threading::OutputMessage<WriterFrontend>
-	{
-	public:
-		enum Type
-			{
-			INFO, WARNING, ERROR
-			};
-
-		ReaderErrorMessage(ReaderFrontend* reader, Type arg_type, const char* arg_msg)
-			: threading::OutputMessage<ReaderFrontend>("ReaderErrorMessage", reader)
-			{
-			type = arg_type;
-			msg = copy_string(arg_msg);
-			}
-
-		virtual ~ReaderErrorMessage()
-			{
-			delete [] msg;
-			}
-
-		virtual bool Process();
-
-	private:
-		const char* msg;
-		Type type;
-	};
-#endif // BOBERT
 
 }
 
@@ -241,7 +210,7 @@ void BaseWriterBackend::DeleteVals(int num_writes, Value*** vals)
 
 void BaseWriterBackend::SendEvent(const char* event_name, ValPtrVector& vals)
 	{
-	SendOut(new SendEventMessage(this, event_name, vals));
+	SendOut(new WriterEventMessage(this, event_name, vals));
 	}
 
 void BaseWriterBackend::VaSendEvent(const char* event_name, size_t num_vals, ...)

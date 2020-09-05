@@ -1656,7 +1656,7 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& event_name, Val
 
 
 	// At this point, arg_vals has been validated. Convert arg_vals to a val_list, which takes
-	// ownership of arg_vals's Val pointers, and send the event
+	// ownership of arg_vals's Val pointers (so they don't have to be Unref'd), and send the event.
 	Val ** first_val_ptr = arg_vals.data();
 	val_list vl(first_val_ptr, arg_vals.size());
 	mgr.QueueEvent(handler, std::move(vl), SOURCE_LOCAL);
