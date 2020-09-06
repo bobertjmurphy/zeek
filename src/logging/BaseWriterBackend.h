@@ -442,7 +442,7 @@ class BaseWriterBackend : public threading::MsgThread
 		/**
 		 * Sends statistics wherever they need to go.
 		 */
-		virtual void SendStats() const;
+		virtual void SendStats();
 
 
 		/**

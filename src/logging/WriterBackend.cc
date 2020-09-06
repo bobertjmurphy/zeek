@@ -65,7 +65,9 @@ bool logging::WriterBackend::RunHeartbeat(double network_time, double current_ti
 	return true;
 	}
 
+#if OLD
 void logging::WriterBackend::SendStats() const
 	{
 	/// \todo Fill me in
 	}
+#endif

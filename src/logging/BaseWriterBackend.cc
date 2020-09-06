@@ -434,9 +434,15 @@ std::string BaseWriterBackend::FullName() const
 	return result;
 	}
 
-void BaseWriterBackend::SendStats() const
+void BaseWriterBackend::SendStats()
 	{
-	/// \todo Send something here
+	ValPtrVector error_vals =
+		{
+		val_mgr->GetCount(m_logs_received),
+		val_mgr->GetCount(m_log_writes_attempted),
+		val_mgr->GetCount(m_log_writes_succeeded)
+		};
+	SendEvent("statistics", error_vals);
 	}
 
 logging::BaseWriterBackend::HandleWriteErrorsResult BaseWriterBackend::HandleWriteErrors(const LogRecordBatch& records,
@@ -456,7 +462,7 @@ logging::BaseWriterBackend::HandleWriteErrorsResult BaseWriterBackend::HandleWri
 			val_mgr->GetBool(this_error.is_fatal),
 			val_mgr->GetCount(this_error.record_count)
 			};
-		SendEvent("Write error", error_vals);
+		SendEvent("write_error", error_vals);
 
 		error_record_count += this_error.record_count;
 		has_fatal_errors |= this_error.is_fatal;

@@ -84,10 +84,12 @@ class BatchWriterBackend : public BaseWriterBackend
 		 */
 		virtual bool WriteLogs(size_t num_writes, threading::Value*** vals) override final;
 
+#if OLD
 		/**
 		 * Sends statistics wherever they need to go.
 		 */
 		virtual void SendStats() const override;
+#endif // OLD
 
 		/**
 		 * Regularly triggered for execution in the child thread.
