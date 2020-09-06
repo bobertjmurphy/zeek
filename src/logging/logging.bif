@@ -6,6 +6,12 @@ module Log;
 #include "logging/Manager.h"
 %%}
 
+## Generated when a writer encounters an error
+event Log::write_error%(description: string, is_fatal: bool, log_count: count%);
+
+## Periodic report on throughput
+event Log::statistics%(logs_received: count, log_writes_attempted: count, log_writes_succeeded: count%);
+
 type Filter: record;
 type Stream: record;
 type RotationInfo: record;

@@ -442,7 +442,7 @@ void BaseWriterBackend::SendStats()
 		val_mgr->GetCount(m_log_writes_attempted),
 		val_mgr->GetCount(m_log_writes_succeeded)
 		};
-	SendEvent("statistics", error_vals);
+	SendEvent("Log::statistics", error_vals);
 	}
 
 logging::BaseWriterBackend::HandleWriteErrorsResult BaseWriterBackend::HandleWriteErrors(const LogRecordBatch& records,
@@ -462,7 +462,7 @@ logging::BaseWriterBackend::HandleWriteErrorsResult BaseWriterBackend::HandleWri
 			val_mgr->GetBool(this_error.is_fatal),
 			val_mgr->GetCount(this_error.record_count)
 			};
-		SendEvent("write_error", error_vals);
+		SendEvent("Log::write_error", error_vals);
 
 		error_record_count += this_error.record_count;
 		has_fatal_errors |= this_error.is_fatal;
