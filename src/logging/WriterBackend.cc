@@ -37,7 +37,8 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
 
 	// Repeatedly call DoWrite()
 	bool no_fatal_errors = true;
-	for ( int j = 0; j < num_writes; j++ )
+	int j = 0;
+	for ( ; j < num_writes; j++ )
 		{
 		// Try to write to the normal destination
 		bool success = DoWrite(num_fields, fields, vals[j]);
@@ -52,6 +53,9 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
 
 	// Delete vals
 	DeleteVals(num_writes, vals);
+
+	// Report statistics
+	ReportWriteStatistics(num_writes, j);
 
 	return no_fatal_errors;
 	}

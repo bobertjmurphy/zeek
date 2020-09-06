@@ -138,7 +138,18 @@ bool logging::BatchWriterBackend::WriteBatchIfNeeded(bool force_write)
 	WriteErrorInfoVector errors = BatchWrite(m_cached_log_records);
 
 	// Analyze any reported errors
-	bool no_fatal_errors = HandleWriteErrors(m_cached_log_records, errors);
+	size_t log_writes_attempted = m_cached_log_records.size();
+	size_t log_writes_succeeded = log_writes_attempted;
+	bool no_fatal_errors = true;
+	if (!errors.empty())
+		{
+		HandleWriteErrorsResult r = HandleWriteErrors(m_cached_log_records, errors);
+		no_fatal_errors = r.no_fatal_errors;
+		log_writes_succeeded = log_writes_attempted - r.error_record_count;
+		}
+
+	// Report what happened
+	ReportWriteStatistics(log_writes_attempted, log_writes_succeeded);
 
 	// Clear the cache and return
 	size_t cached_record_count = m_cached_log_records.size();

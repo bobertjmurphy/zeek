@@ -164,6 +164,9 @@ BaseWriterBackend::BaseWriterBackend(WriterFrontend* arg_frontend) :
 	frontend = arg_frontend;
 	info = new WriterInfo(frontend->Info());
 	rotation_counter = 0;
+	m_logs_received = 0;
+	m_log_writes_attempted = 0;
+	m_log_writes_succeeded = 0;
 
 	SetName(frontend->Name());
 
@@ -291,6 +294,7 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
 		}
 
 	size_t logs_to_write = std::max(num_writes, 0);
+	m_logs_received += logs_to_write;
 	bool success = this->WriteLogs(logs_to_write, vals);
 
 	// Don't call DeleteVals() here - BaseWriterBackend caches vals, and
@@ -435,10 +439,11 @@ void BaseWriterBackend::SendStats() const
 	/// \todo Send something here
 	}
 
-bool BaseWriterBackend::HandleWriteErrors(const LogRecordBatch& records,
+logging::BaseWriterBackend::HandleWriteErrorsResult BaseWriterBackend::HandleWriteErrors(const LogRecordBatch& records,
         const WriteErrorInfoVector& errors)
 	{
 	bool has_fatal_errors = false;
+	size_t error_record_count = 0;
 	for (const WriteErrorInfo& this_error: errors)
 		{
 		// Report any errors. The columns are:
@@ -453,12 +458,12 @@ bool BaseWriterBackend::HandleWriteErrors(const LogRecordBatch& records,
 			};
 		SendEvent("Write error", error_vals);
 
-		// Note any fatal errors
+		error_record_count += this_error.record_count;
 		has_fatal_errors |= this_error.is_fatal;
 		}
 
-	bool no_fatal_errors = !has_fatal_errors;
-	return no_fatal_errors;
+	HandleWriteErrorsResult result = { error_record_count, !has_fatal_errors };
+	return result;
 	}
 
 bool BaseWriterBackend::HandleWriteErrors(size_t error_log_index, size_t num_writes,
@@ -478,7 +483,14 @@ bool BaseWriterBackend::HandleWriteErrors(size_t error_log_index, size_t num_wri
 		                    "Not written due to previous error", false);
 		}
 
-	bool no_fatal_errors = HandleWriteErrors(record_batch, errors);
-
+	HandleWriteErrorsResult r = HandleWriteErrors(record_batch, errors);
+	bool no_fatal_errors = r.no_fatal_errors;
 	return no_fatal_errors;
+	}
+
+void BaseWriterBackend::ReportWriteStatistics(size_t log_writes_attempted,
+        size_t log_writes_succeeded)
+	{
+	m_log_writes_attempted += log_writes_attempted;
+	m_log_writes_succeeded += log_writes_succeeded;
 	}

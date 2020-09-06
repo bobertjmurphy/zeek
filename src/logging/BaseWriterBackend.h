@@ -507,19 +507,45 @@ class BaseWriterBackend : public threading::MsgThread
 		 */
 		typedef std::vector<WriteErrorInfo> WriteErrorInfoVector;
 
+
 		/**
 		 * Non-batch writers call this to report errors when writing log records.
 		 *
-		 * @return true on no fatal errors, false on a fatal error.
+		 * @param error_log_index The index of the first log record that had an error
+		 *
+		 * @param num_writes: The number of log records involved in the write attempt
+		 *
+		 * @param vals: The vals argument sent to Write()
+		 *
+		 * @return True if there were no fatal errors, false if there were.
 		 */
-		bool HandleWriteErrors(size_t error_log_index, size_t num_writes, threading::Value*** vals);
+		bool HandleWriteErrors(size_t error_log_index,
+		                       size_t num_writes,
+		                       threading::Value*** vals);
+
+		/**
+		 * Return value from the next version of HandleWriteErrors.
+		 */
+		struct HandleWriteErrorsResult
+			{
+			size_t error_record_count;
+			bool no_fatal_errors;
+			};
 
 		/**
 		 * Batch writers call this to report errors when writing log records.
 		 *
-		 * @return true on no fatal errors, false on a fatal error.
+		 * @param records The log records involved in thew write attempt
+		 *
+		 * @return A HandleWriteErrorsResult value
 		 */
-		bool HandleWriteErrors(const LogRecordBatch& records, const WriteErrorInfoVector& errors);
+		HandleWriteErrorsResult HandleWriteErrors(const LogRecordBatch& records,
+		        const WriteErrorInfoVector& errors);
+
+		/**
+		 * Writers call this to report on how well things worked
+		 */
+		void ReportWriteStatistics(size_t log_writes_attempted, size_t log_writes_succeeded);
 
 		/**
 		 * Method allowing a writer to send a specified Zeek event. Vals must
@@ -555,7 +581,9 @@ class BaseWriterBackend : public threading::MsgThread
 
 
 		// Statistics
-		size_t logs_successfully_written = 0;
+		size_t m_logs_received;
+		size_t m_log_writes_attempted;
+		size_t m_log_writes_succeeded;
 	};
 
 
