@@ -584,6 +584,9 @@ class BaseWriterBackend : public threading::MsgThread
 		size_t m_logs_received;
 		size_t m_log_writes_attempted;
 		size_t m_log_writes_succeeded;
+		double m_send_stats_interval_secs;
+		double m_next_stats_send_clock_time_secs;
+
 	};
 
 

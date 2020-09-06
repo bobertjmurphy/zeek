@@ -167,6 +167,8 @@ BaseWriterBackend::BaseWriterBackend(WriterFrontend* arg_frontend) :
 	m_logs_received = 0;
 	m_log_writes_attempted = 0;
 	m_log_writes_succeeded = 0;
+	m_send_stats_interval_secs = -1;			// Uninited
+	m_next_stats_send_clock_time_secs = -1;		// Uninited
 
 	SetName(frontend->Name());
 
@@ -372,7 +374,27 @@ bool BaseWriterBackend::OnHeartbeat(double network_time, double current_time)
 
 	SendOut(new FlushWriteBufferMessage(frontend));
 
-	this->SendStats();
+	// If needed, init the stats timing member variables
+	if (m_send_stats_interval_secs <= 0)
+		{
+		// Get the stats interval - it must be between one millisecond and 24 hours
+		std::string scratch = this->GetConfigString("statistics_interval_seconds");
+		m_send_stats_interval_secs = std::stod(scratch);
+		m_send_stats_interval_secs = std::max(m_send_stats_interval_secs, 0.001);
+		m_send_stats_interval_secs = std::min(m_send_stats_interval_secs, 86400.0);
+
+		// Determine the next time to send statistics
+		m_next_stats_send_clock_time_secs = current_time + m_send_stats_interval_secs;
+		}
+
+	// If the time is right, send stats on this writer
+	if (current_time >= m_next_stats_send_clock_time_secs)
+		{
+		this->SendStats();
+		m_next_stats_send_clock_time_secs = current_time + m_send_stats_interval_secs;
+		}
+
+	// Pass the heartbeat request on to subclasses
 	bool result = this->RunHeartbeat(network_time, current_time);
 	return result;
 	}
@@ -412,7 +434,7 @@ BaseWriterBackend::WriterInfo::config_map BaseWriterBackend::GetDefaultConfigMap
 	{
 	const static BaseWriterBackend::WriterInfo::config_map c_default_config =
 		{
-		/// \todo Fill me in
+			{   "statistics_interval_seconds",	"10"     },
 		};
 	return c_default_config;
 	}

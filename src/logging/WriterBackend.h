@@ -90,13 +90,6 @@ class WriterBackend : public BaseWriterBackend
 		 */
 		virtual bool RunHeartbeat(double network_time, double current_time) override final;
 
-#if OLD
-		/**
-		 * Sends statistics wherever they need to go.
-		 */
-		virtual void SendStats() const override;
-#endif
-
 	};
 
 }

@@ -78,22 +78,6 @@ bool logging::BatchWriterBackend::RunHeartbeat(double network_time, double curre
 	return no_fatal_errors;
 	}
 
-#if OLD
-void logging::BatchWriterBackend::SendStats() const
-	{
-	BaseWriterBackend::SendStats();
-
-	ValPtrVector error_vals =
-		{
-		val_mgr->GetCount(m_logs_received),
-		val_mgr->GetCount(m_log_writes_attempted),
-		val_mgr->GetCount(m_log_writes_succeeded)
-		};
-	SendEvent("statistics", error_vals);
-
-	}
-#endif // OLD
-
 void logging::BatchWriterBackend::DeleteCachedLogRecords(size_t first_index, size_t n_records)
 	{
 	// Clamp the values to reasonable numbers
