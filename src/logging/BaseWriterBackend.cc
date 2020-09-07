@@ -315,7 +315,17 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
 
 bool BaseWriterBackend::InternalWrite(size_t num_writes, threading::Value*** vals)
 	{
-	return this->WriteLogs(num_writes, vals);
+	// Exit early if nothing is to be written
+	if (num_writes == 0)
+		{
+		return true;		// No fatal errors
+		}
+
+		bool no_fatal_errors = this->WriteLogs(num_writes, vals);
+		
+		// Don't delete vals - batching writers may be caching them
+
+		return no_fatal_errors;
 	}
 
 bool BaseWriterBackend::SetBuf(bool enabled)

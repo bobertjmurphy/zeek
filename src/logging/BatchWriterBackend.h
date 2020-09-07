@@ -165,12 +165,12 @@ class BatchWriterBackend : public BaseWriterBackend
 		/**
 		 * If the batch transmission criteria have been met, send all cached records at once
 		 */
-		bool WriteBatchIfNeeded(bool force_write);
+		bool WriteBatchIfNeeded(bool force_write, double current_wallclock_time);
 
 		/**
 		 * The time the first record currently in the cache was added.
 		 */
-		double m_first_record_wallclock_time;
+		double m_first_cached_record_time;
 
 	};
 

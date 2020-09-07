@@ -3,7 +3,7 @@
 #include "BatchWriterBackend.h"
 
 logging::BatchWriterBackend::BatchWriterBackend(WriterFrontend* arg_frontend) :
-	BaseWriterBackend(arg_frontend), m_first_record_wallclock_time(0)
+	BaseWriterBackend(arg_frontend), m_first_cached_record_time(0)
 	{
 	// Determine configuration values
 	std::string scratch;
@@ -30,7 +30,7 @@ bool logging::BatchWriterBackend::OnFinish(double network_time)
 		return true;
 
 	// Force-write any remaining records
-	WriteBatchIfNeeded(true);
+	WriteBatchIfNeeded(true, 0);		// Current time doesn't matter
 
 	// Report final statistics
 	SendStats();
@@ -62,7 +62,7 @@ bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*
 		{
 		// Will this put the first record into the cache?
 		if (m_cached_log_records.empty())
-			m_first_record_wallclock_time = current_time(true);
+			m_first_cached_record_time = current_time(true);
 
 		// Cache the underlying log records, and delete the top level of vals
 		m_cached_log_records.insert(m_cached_log_records.end(), vals, vals + num_writes);
@@ -70,14 +70,15 @@ bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*
 		}
 
 	// If needed, write a batch, without forcing it
-	bool no_fatal_errors = WriteBatchIfNeeded(false);
+	double current_wallclock_time = current_time(true);
+	bool no_fatal_errors = WriteBatchIfNeeded(false, current_wallclock_time);
 	return no_fatal_errors;
 	}
 
 bool logging::BatchWriterBackend::RunHeartbeat(double network_time, double current_time)
 	{
 	// If needed, write a batch, without forcing it
-	bool no_fatal_errors = WriteBatchIfNeeded(false);
+	bool no_fatal_errors = WriteBatchIfNeeded(false, current_time);
 	return no_fatal_errors;
 	}
 
@@ -106,7 +107,7 @@ void logging::BatchWriterBackend::DeleteCachedLogRecords(size_t first_index, siz
 	}
 
 
-bool logging::BatchWriterBackend::WriteBatchIfNeeded(bool force_write)
+bool logging::BatchWriterBackend::WriteBatchIfNeeded(bool force_write, double current_wallclock_time)
 	{
 	// Don't write anything if nothing is cached
 	if (m_cached_log_records.empty())
@@ -123,8 +124,7 @@ bool logging::BatchWriterBackend::WriteBatchIfNeeded(bool force_write)
 		}
 	if (!write_batch && (m_max_batch_delay_seconds > 0))
 		{
-		double current_wallclock_time = current_time(true);
-		double delay = current_wallclock_time - m_first_record_wallclock_time;
+		double delay = current_wallclock_time - m_first_cached_record_time;
 		write_batch = (delay >= m_max_batch_delay_seconds);
 		}
 	if (!write_batch)

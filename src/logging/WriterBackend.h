@@ -90,6 +90,7 @@ class WriterBackend : public BaseWriterBackend
 		 */
 		virtual bool RunHeartbeat(double network_time, double current_time) override final;
 
+#if OLD
 	private:
 		/**
 		 * Output method implementing recording zero or more log entries by simply
@@ -113,6 +114,7 @@ class WriterBackend : public BaseWriterBackend
 		 * a failure, this is also the index of the first failing log record.
 		 */
 		virtual size_t DoWriteLogs(size_t num_writes, threading::Value*** vals);
+#endif
 	};
 
 }
