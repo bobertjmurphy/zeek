@@ -76,19 +76,6 @@ class WriterBackend : public BaseWriterBackend
 		 * be terminated.
 		 */
 		virtual bool WriteLogs(size_t num_writes, threading::Value*** vals) override final;
-
-		/**
-		 * Regulatly triggered for execution in the child thread.
-		 *
-		 * network_time: The network_time when the heartbeat was trigger by
-		 * the main thread.
-		 *
-		 * current_time: Wall clock when the heartbeat was trigger by the
-		 * main thread.
-		 *
-		 * @return true if the thread should continue, false if it should terminate.
-		 */
-		virtual bool RunHeartbeat(double network_time, double current_time) override final;
 	};
 
 }

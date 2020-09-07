@@ -55,8 +55,3 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
 
 	return no_fatal_errors;
 	}
-
-bool logging::WriterBackend::RunHeartbeat(double network_time, double current_time)
-	{
-	return true;
-	}

@@ -410,7 +410,7 @@ bool BaseWriterBackend::OnHeartbeat(double network_time, double current_time)
 		}
 
 	// Pass the heartbeat request on to subclasses
-	bool result = this->RunHeartbeat(network_time, current_time);
+	bool result = this->DoHeartbeat(network_time, current_time);
 	return result;
 	}
 

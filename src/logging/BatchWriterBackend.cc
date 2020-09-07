@@ -75,13 +75,6 @@ bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*
 	return no_fatal_errors;
 	}
 
-bool logging::BatchWriterBackend::RunHeartbeat(double network_time, double current_time)
-	{
-	// If needed, write a batch, without forcing it
-	bool no_fatal_errors = WriteBatchIfNeeded(false, current_time);
-	return no_fatal_errors;
-	}
-
 void logging::BatchWriterBackend::DeleteCachedLogRecords(size_t first_index, size_t n_records)
 	{
 	// Clamp the values to reasonable numbers
