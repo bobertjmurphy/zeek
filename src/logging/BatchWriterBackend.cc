@@ -32,6 +32,9 @@ bool logging::BatchWriterBackend::OnFinish(double network_time)
 	// Force-write any remaining records
 	WriteBatchIfNeeded(true);
 
+	// Report final statistics
+	SendStats();
+
 	return DoFinish(network_time);		// Implemented by the writers
 	}
 

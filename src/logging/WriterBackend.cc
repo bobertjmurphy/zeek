@@ -19,6 +19,9 @@ bool logging::WriterBackend::OnFinish(double network_time)
 	if ( Failed() )
 		return true;
 
+	// Report final statistics
+	SendStats();
+
 	return DoFinish(network_time);		// Implemented by the writers
 	}
 
@@ -31,7 +34,7 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
 		}
 
 	size_t num_successful_writes = DoWriteLogs(num_writes, vals);
-		
+
 	bool no_fatal_errors = true;
 	if (num_successful_writes < num_writes)
 		no_fatal_errors = HandleWriteErrors(num_successful_writes, num_writes, vals);
