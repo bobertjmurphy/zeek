@@ -297,16 +297,16 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
 
 	size_t logs_to_write = std::max(num_writes, 0);
 	m_logs_received += logs_to_write;
-	bool success = this->InternalWrite(logs_to_write, vals);
+	bool no_fatal_errors = this->InternalWrite(logs_to_write, vals);
 
 	// Don't call DeleteVals() here - BaseWriterBackend caches vals, and
 	// accesses it after this function returns, so deleting vals here will
 	// cause a dangling reference.
 
-	if ( ! success )
+	if ( ! no_fatal_errors )
 		DisableFrontend();
 
-	return success;
+	return no_fatal_errors;
 	}
 
 bool BaseWriterBackend::InternalWrite(size_t num_writes, threading::Value*** vals)
