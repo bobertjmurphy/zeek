@@ -30,34 +30,39 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
 		return true;		// No fatal errors
 		}
 
+	size_t num_successful_writes = DoWriteLogs(num_writes, vals);
+		
+	bool no_fatal_errors = true;
+	if (num_successful_writes < num_writes)
+		no_fatal_errors = HandleWriteErrors(num_successful_writes, num_writes, vals);
+
+	// Delete vals
+	DeleteVals(num_writes, vals);
+
+	// Report statistics
+	ReportWriteStatistics(num_writes, num_successful_writes);
+
+	return no_fatal_errors;
+	}
+
+size_t logging::WriterBackend::DoWriteLogs(size_t num_writes, threading::Value*** vals)
+	{
 	// Get necessary values
 	int num_fields = this->NumFields();
 	const threading::Field* const *fields = this->Fields();
 	assert(num_fields > 0 && fields != nullptr);
 
 	// Repeatedly call DoWrite()
-	bool no_fatal_errors = true;
-	int j = 0;
-	for ( ; j < num_writes; j++ )
+	int result = 0;
+	bool success = true;
+	for ( size_t j = 0; j < num_writes && success; j++ )
 		{
 		// Try to write to the normal destination
-		bool success = DoWrite(num_fields, fields, vals[j]);
-
-		// Handle any failures
-		if ( ! success )
-			{
-			no_fatal_errors = HandleWriteErrors(j, num_writes, vals);
-			break;
-			}
+		success = DoWrite(num_fields, fields, vals[j]);
+		if (success)
+			result++;
 		}
-
-	// Delete vals
-	DeleteVals(num_writes, vals);
-
-	// Report statistics
-	ReportWriteStatistics(num_writes, j);
-
-	return no_fatal_errors;
+	return result;
 	}
 
 bool logging::WriterBackend::RunHeartbeat(double network_time, double current_time)

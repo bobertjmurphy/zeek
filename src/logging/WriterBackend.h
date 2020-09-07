@@ -90,6 +90,29 @@ class WriterBackend : public BaseWriterBackend
 		 */
 		virtual bool RunHeartbeat(double network_time, double current_time) override final;
 
+	private:
+		/**
+		 * Output method implementing recording zero or more log entries by simply
+		 * calling DoWrite() in a loop.
+		 *
+		 * This is a "low-level" write request that actually tries to write to
+		 * the target.
+		 *
+		 * @param num_writes: The number of log records to be written with
+		 * this call.
+		 *
+		 * @param vals: An array of size \a num_fields *  \a num_writes with the
+		 * log values. Within each group of \a num_fields values, their types
+		 * must match with the field passed to Init(). The method takes ownership
+		 * of \a vals.
+		 *
+		 * @return The number of log records written. If this is not the same
+		 * as num_writes, an implementation should also call Error() to
+		 * indicate what happened. Returning a value less than num_writes does
+		 * not automatically cause the writer to shut down. If there was
+		 * a failure, this is also the index of the first failing log record.
+		 */
+		virtual size_t DoWriteLogs(size_t num_writes, threading::Value*** vals);
 	};
 
 }
