@@ -145,7 +145,8 @@ class BaseWriterBackend : public threading::MsgThread
 		bool Init(int num_fields, const threading::Field* const* fields);
 
 		/**
-		 * Writes one or more log entries.
+		 * Member function called by the frontend, via a WriteMessage, to
+		 * write one or more log entries.
 		 *
 		 * @param num_fields: The number of log fields for this stream. The
 		 * value must match what was passed to Init().
@@ -587,6 +588,24 @@ class BaseWriterBackend : public threading::MsgThread
 		double m_send_stats_interval_secs;
 		double m_next_stats_send_clock_time_secs;
 
+		/**
+		 * Internal implementation, used by Write() that calls subclasses' WriteLogs()
+		 * implementations.
+		 *
+		 * @param num_writes: The number of log records to be written with
+		 * this call.
+		 *
+		 * @param vals: An array of size \a num_fields *  \a num_writes with the
+		 * log values. Within each group of \a num_fields values, their types
+		 * must match with the field passed to Init(). The method takes ownership
+		 * of \a vals.
+		 *
+		 * @return true on no fatal errors, false on a fatal error. If there
+		 * were any fatal errors, an implementation should also call Error() to
+		 * indicate what happened, and the writer and its thread will eventually
+		 * be terminated.
+		 */
+		bool InternalWrite(size_t num_writes, threading::Value*** vals);
 	};
 
 

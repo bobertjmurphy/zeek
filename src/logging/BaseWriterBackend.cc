@@ -297,7 +297,11 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
 
 	size_t logs_to_write = std::max(num_writes, 0);
 	m_logs_received += logs_to_write;
+#if OLD
 	bool success = this->WriteLogs(logs_to_write, vals);
+#else
+	bool success = this->InternalWrite(logs_to_write, vals);
+#endif
 
 	// Don't call DeleteVals() here - BaseWriterBackend caches vals, and
 	// accesses it after this function returns, so deleting vals here will
@@ -307,6 +311,11 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
 		DisableFrontend();
 
 	return success;
+	}
+
+bool BaseWriterBackend::InternalWrite(size_t num_writes, threading::Value*** vals)
+	{
+	return this->WriteLogs(num_writes, vals);
 	}
 
 bool BaseWriterBackend::SetBuf(bool enabled)
