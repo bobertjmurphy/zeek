@@ -450,7 +450,7 @@ BaseWriterBackend::WriterInfo::config_map BaseWriterBackend::GetDefaultConfigMap
 	{
 	const static BaseWriterBackend::WriterInfo::config_map c_default_config =
 		{
-			{   "statistics_interval_seconds",	"10"     },
+			{   "statistics_interval_seconds",		"60"     		},	// One minute
 		};
 	return c_default_config;
 	}
