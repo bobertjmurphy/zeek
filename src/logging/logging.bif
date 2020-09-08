@@ -10,7 +10,7 @@ module Log;
 event Log::write_error%(description: string, is_fatal: bool, log_count: count%);
 
 ## Periodic report on throughput
-event Log::statistics%(logs_received: count, log_writes_attempted: count, log_writes_succeeded: count%);
+event Log::statistics%(logs_received: count, log_writes_attempted: count, log_writes_succeeded: count, last_successful_write_time: time%);
 
 type Filter: record;
 type Stream: record;

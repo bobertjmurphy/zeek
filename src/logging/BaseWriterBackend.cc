@@ -167,8 +167,9 @@ BaseWriterBackend::BaseWriterBackend(WriterFrontend* arg_frontend) :
 	m_logs_received = 0;
 	m_log_writes_attempted = 0;
 	m_log_writes_succeeded = 0;
-	m_send_stats_interval_secs = -1;			// Uninited
-	m_next_stats_send_clock_time_secs = -1;		// Uninited
+	m_send_stats_interval_secs = -1;				// Uninited
+	m_next_stats_send_clock_time_secs = -1;			// Uninited
+	m_last_successful_write_clock_time_secs = 0;	// Uninited
 
 	SetName(frontend->Name());
 
@@ -477,7 +478,8 @@ void BaseWriterBackend::SendStats()
 		{
 		val_mgr->GetCount(m_logs_received),
 		val_mgr->GetCount(m_log_writes_attempted),
-		val_mgr->GetCount(m_log_writes_succeeded)
+		val_mgr->GetCount(m_log_writes_succeeded),
+		new Val(m_last_successful_write_clock_time_secs, TYPE_TIME)
 		};
 	SendEvent("Log::statistics", error_vals);
 	}
@@ -536,4 +538,6 @@ void BaseWriterBackend::ReportWriteStatistics(size_t log_writes_attempted,
 	{
 	m_log_writes_attempted += log_writes_attempted;
 	m_log_writes_succeeded += log_writes_succeeded;
+	if (log_writes_succeeded > 0)
+		m_last_successful_write_clock_time_secs = current_time(true);
 	}
