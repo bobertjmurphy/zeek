@@ -1629,7 +1629,7 @@ bool Manager::SendEvent(BaseWriterBackend* writer, const string& event_name, Val
 
 	// Validate the field count
 	RecordType *type = handler->FType()->Args();
-	int num_event_vals = type->NumFields();
+	size_t num_event_vals = type->NumFields();
 	if ( arg_vals.size() != num_event_vals )
 		{
 		Warning(i, "Wrong number of values for event %s", event_name.c_str());

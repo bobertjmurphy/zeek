@@ -430,11 +430,11 @@ logging::BatchWriterBackend::WriteErrorInfoVector Ascii_Batch::BatchWrite(const 
 			{
 			WriteOneRecord(*itr);
 			}
-		catch (fatal_writer_error e)
+		catch (fatal_writer_error& e)
 			{
 			errors.emplace_back(i, 1, e.what(), true);
 			}
-		catch (non_fatal_writer_error e)
+		catch (non_fatal_writer_error& e)
 			{
 			errors.emplace_back(i, 1, e.what(), false);
 			}

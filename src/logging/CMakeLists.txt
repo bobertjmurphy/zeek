@@ -25,3 +25,8 @@ bif_target(logging.bif)
 bro_add_subdir_library(logging ${logging_SRCS})
 add_dependencies(bro_logging generate_outputs)
 
+# Avoid complaints about pragma mark
+if ( CMAKE_COMPILER_IS_GNUCC )
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
+endif()
+
