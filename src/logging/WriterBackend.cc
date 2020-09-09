@@ -33,7 +33,7 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
 	assert(num_fields > 0 && fields != nullptr);
 
 	// Repeatedly call DoWrite()
-	int num_successful_writes = 0;
+	size_t num_successful_writes = 0;
 	bool success = true;
 	for ( size_t j = 0; j < num_writes && success; j++ )
 		{
