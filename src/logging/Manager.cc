@@ -1436,6 +1436,16 @@ RecordType* Manager::StreamColumns(EnumVal* stream_id)
 	return stream->columns;
 	}
 
+std::string Manager::StreamName(EnumVal* stream_id)
+	{
+	auto stream = FindStream(stream_id);
+
+	if ( ! stream )
+		return "";
+
+	return stream->name;
+	}
+
 // Timer which on dispatching rotates the filter.
 class RotationTimer : public Timer
 	{

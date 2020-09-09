@@ -548,12 +548,13 @@ void BaseWriterBackend::ReportWriteStatistics(size_t log_writes_attempted,
 
 std::string BaseWriterBackend::StreamName()
 	{
-	UNIMPLEMENTED
-	return "stream name";
+	EnumVal* stream_id = frontend->StreamID();
+	std::string stream_name = log_mgr->StreamName(stream_id);
+	return stream_name;
 	}
 
 std::string BaseWriterBackend::FilterName()
 	{
-	UNIMPLEMENTED
+	// UNIMPLEMENTED
 	return "filter name";
 	}

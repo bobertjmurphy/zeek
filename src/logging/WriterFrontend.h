@@ -202,6 +202,14 @@ class WriterFrontend
 			return fields;
 			}
 
+		/**
+		 * Returns an ID for the stream
+		 */
+		EnumVal* StreamID() const
+			{
+			return stream;
+			}
+
 	protected:
 		friend class Manager;
 

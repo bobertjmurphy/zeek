@@ -231,6 +231,11 @@ class Manager : public plugin::ComponentManager<Tag, Component>
 		 */
 		RecordType* StreamColumns(EnumVal* stream_id);
 
+		/**
+		 * @return the name of a stream
+		 */
+		std::string StreamName(EnumVal* stream_id);
+
 	protected:
 		friend class WriterFrontend;
 		friend class RotationFinishedMessage;
