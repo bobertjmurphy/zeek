@@ -476,6 +476,10 @@ void BaseWriterBackend::SendStats()
 	{
 	ValPtrVector error_vals =
 		{
+		new StringVal("stream_name"),
+		new StringVal("filter_name"),
+		new StringVal("writer_name"),
+		new StringVal("path"),
 		val_mgr->GetCount(m_logs_received),
 		val_mgr->GetCount(m_log_writes_attempted),
 		val_mgr->GetCount(m_log_writes_succeeded),
