@@ -476,14 +476,14 @@ void BaseWriterBackend::SendStats()
 	{
 	ValPtrVector error_vals =
 		{
-		new StringVal("stream_name"),
-		new StringVal("filter_name"),
-		new StringVal("writer_name"),
-		new StringVal("path"),
-		val_mgr->GetCount(m_logs_received),
-		val_mgr->GetCount(m_log_writes_attempted),
-		val_mgr->GetCount(m_log_writes_succeeded),
-		new Val(m_last_successful_write_clock_time_secs, TYPE_TIME)
+		new StringVal(StreamName()),								// "stream_name" field in .bif event
+		new StringVal(FilterName()),								// "filter_name" field in .bif event
+		new StringVal("m_backend_name"),							// "writer_name" field in .bif event
+		new StringVal("path"),										// "path" field in .bif event
+		val_mgr->GetCount(m_logs_received),							// "logs_received" field in .bif event
+		val_mgr->GetCount(m_log_writes_attempted),					// "log_writes_attempted" field in .bif event
+		val_mgr->GetCount(m_log_writes_succeeded),					// "log_writes_succeeded" field in .bif event
+		new Val(m_last_successful_write_clock_time_secs, TYPE_TIME)	// "last_successful_write_time" field in .bif event
 		};
 	SendEvent("Log::statistics", error_vals);
 	}
@@ -544,4 +544,16 @@ void BaseWriterBackend::ReportWriteStatistics(size_t log_writes_attempted,
 	m_log_writes_succeeded += log_writes_succeeded;
 	if (log_writes_succeeded > 0)
 		m_last_successful_write_clock_time_secs = current_time(true);
+	}
+
+std::string BaseWriterBackend::StreamName()
+	{
+	UNIMPLEMENTED
+	return "stream name";
+	}
+
+std::string BaseWriterBackend::FilterName()
+	{
+	UNIMPLEMENTED
+	return "filter name";
 	}

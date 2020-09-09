@@ -578,6 +578,10 @@ class BaseWriterBackend : public threading::MsgThread
 		double m_send_stats_interval_secs;
 		double m_next_stats_send_clock_time_secs;
 
+		// Statistics support
+		std::string StreamName();
+		std::string FilterName();
+
 		/**
 		 * Internal implementation, used by Write() that calls subclasses' WriteLogs()
 		 * implementations.
