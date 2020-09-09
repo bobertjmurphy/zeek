@@ -117,7 +117,10 @@ class FlushMessage : public threading::InputMessage<BaseWriterBackend>
 
 using namespace logging;
 
-WriterFrontend::WriterFrontend(const BaseWriterBackend::WriterInfo& arg_info, EnumVal* arg_stream, EnumVal* arg_writer, bool arg_local, bool arg_remote)
+WriterFrontend::WriterFrontend(const BaseWriterBackend::WriterInfo& arg_info, EnumVal* arg_stream,
+                               EnumVal* arg_writer, bool arg_local, bool arg_remote,
+                               const std::string& arg_filter_name) :
+	filter_name(arg_filter_name)
 	{
 	stream = arg_stream;
 	writer = arg_writer;

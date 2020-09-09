@@ -294,6 +294,9 @@ class Manager : public plugin::ComponentManager<Tag, Component>
 
 		vector<Stream *> streams;	// Indexed by stream enum.
 		int rotations_pending;	// Number of rotations not yet finished.
+
+		std::map<const BaseWriterBackend*, const Stream*> writer_to_stream_map;
+		std::map<const BaseWriterBackend*, std::string> writer_to_filter_name_map;
 	};
 
 }

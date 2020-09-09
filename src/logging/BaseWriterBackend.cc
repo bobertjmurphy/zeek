@@ -185,6 +185,11 @@ BaseWriterBackend::BaseWriterBackend(WriterFrontend* arg_frontend) :
 		back_end_description = back_end_description.substr(loc);
 		}
 	m_backend_name = back_end_description;
+
+	// Determine the stream and filter names
+	EnumVal* stream_id = frontend->StreamID();
+	m_stream_name = log_mgr->StreamName(stream_id);
+	m_filter_name = frontend->FilterName();
 	}
 
 BaseWriterBackend::~BaseWriterBackend()
@@ -476,10 +481,10 @@ void BaseWriterBackend::SendStats()
 	{
 	ValPtrVector error_vals =
 		{
-		new StringVal(StreamName()),								// "stream_name" field in .bif event
-		new StringVal(FilterName()),								// "filter_name" field in .bif event
-		new StringVal("m_backend_name"),							// "writer_name" field in .bif event
-		new StringVal("path"),										// "path" field in .bif event
+		new StringVal(m_stream_name),								// "stream_name" field in .bif event
+		new StringVal(m_filter_name),								// "filter_name" field in .bif event
+		new StringVal(m_backend_name),								// "writer_name" field in .bif event
+		new StringVal(Info().path),									// "path" field in .bif event
 		val_mgr->GetCount(m_logs_received),							// "logs_received" field in .bif event
 		val_mgr->GetCount(m_log_writes_attempted),					// "log_writes_attempted" field in .bif event
 		val_mgr->GetCount(m_log_writes_succeeded),					// "log_writes_succeeded" field in .bif event
@@ -544,17 +549,4 @@ void BaseWriterBackend::ReportWriteStatistics(size_t log_writes_attempted,
 	m_log_writes_succeeded += log_writes_succeeded;
 	if (log_writes_succeeded > 0)
 		m_last_successful_write_clock_time_secs = current_time(true);
-	}
-
-std::string BaseWriterBackend::StreamName()
-	{
-	EnumVal* stream_id = frontend->StreamID();
-	std::string stream_name = log_mgr->StreamName(stream_id);
-	return stream_name;
-	}
-
-std::string BaseWriterBackend::FilterName()
-	{
-	// UNIMPLEMENTED
-	return "filter name";
 	}

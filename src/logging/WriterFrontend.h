@@ -24,23 +24,24 @@ class WriterFrontend
 		/**
 		 * Constructor.
 		 *
-		 * stream: The logging stream.
+		 * @param info: The meta information struct for the writer.
 		 *
-		 * writer: The backend writer type, with the value corresponding to the
+		 * @param stream: The logging stream.
+		 *
+		 * @param writer: The backend writer type, with the value corresponding to the
 		 * script-level \c Log::Writer enum (e.g., \a WRITER_ASCII). The
 		 * frontend will internally instantiate a BaseWriterBackend of the
 		 * corresponding type.
 		 *
-		 * info: The meta information struct for the writer.
+		 * @param local: If true, the writer will instantiate a local backend.
 		 *
-		 * local: If true, the writer will instantiate a local backend.
-		 *
-		 * remote: If true, the writer will forward logs to remote
+		 * @param remote: If true, the writer will forward logs to remote
 		 * clients.
 		 *
 		 * Frontends must only be instantiated by the main thread.
 		 */
-		WriterFrontend(const BaseWriterBackend::WriterInfo& info, EnumVal* stream, EnumVal* writer, bool local, bool remote);
+		WriterFrontend(const BaseWriterBackend::WriterInfo& info, EnumVal* stream, EnumVal* writer,
+		               bool local, bool remote, const std::string& filter_name);
 
 		/**
 		 * Destructor.
@@ -210,6 +211,14 @@ class WriterFrontend
 			return stream;
 			}
 
+		/**
+		 * Returns the name for the related filter
+		 */
+		const std::string& FilterName() const
+			{
+			return filter_name;
+			}
+
 	protected:
 		friend class Manager;
 
@@ -217,6 +226,7 @@ class WriterFrontend
 
 		EnumVal* stream;
 		EnumVal* writer;
+		std::string filter_name;
 
 		BaseWriterBackend* backend;	// The backend we have instantiated.
 		bool disabled;	// True if disabled.

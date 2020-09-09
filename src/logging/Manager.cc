@@ -1193,6 +1193,9 @@ WriterFrontend* Manager::CreateWriter(EnumVal* id, EnumVal* writer, BaseWriterBa
 		return w->second->writer;
 		}
 
+	static std::string static_unspecified_string("unspecified");
+	std::string& filter_name = static_unspecified_string;
+
 	WriterInfo* winfo = new WriterInfo;
 	winfo->type = writer->Ref()->AsEnumVal();
 	winfo->writer = 0;
@@ -1220,6 +1223,7 @@ WriterFrontend* Manager::CreateWriter(EnumVal* id, EnumVal* writer, BaseWriterBa
 			found_filter_match = true;
 			winfo->interval = f->interval;
 			winfo->postprocessor = f->postprocessor;
+			filter_name = f->name;
 
 
 			break;
@@ -1245,7 +1249,7 @@ WriterFrontend* Manager::CreateWriter(EnumVal* id, EnumVal* writer, BaseWriterBa
 	winfo->info->rotation_interval = winfo->interval;
 	winfo->info->rotation_base = parse_rotate_base_time(base_time);
 
-	winfo->writer = new WriterFrontend(*winfo->info, id, writer, local, remote);
+	winfo->writer = new WriterFrontend(*winfo->info, id, writer, local, remote, filter_name);
 	winfo->writer->Init(num_fields, fields);
 
 	if ( ! from_remote )

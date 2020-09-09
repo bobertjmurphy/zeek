@@ -579,8 +579,8 @@ class BaseWriterBackend : public threading::MsgThread
 		double m_next_stats_send_clock_time_secs;
 
 		// Statistics support
-		std::string StreamName();
-		std::string FilterName();
+		std::string m_stream_name;
+		std::string m_filter_name;
 
 		/**
 		 * Internal implementation, used by Write() that calls subclasses' WriteLogs()
