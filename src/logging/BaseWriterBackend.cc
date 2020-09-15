@@ -246,6 +246,7 @@ void BaseWriterBackend::DisableFrontend()
 
 bool BaseWriterBackend::Init(int arg_num_fields, const Field* const* arg_fields)
 	{
+	assert(arg_num_fields >= 0);
 	SetOSName(Fmt("zk.%s", Name()));
 	num_fields = arg_num_fields;
 	fields = arg_fields;
@@ -273,7 +274,7 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
 		{
 
 #ifdef DEBUG
-		const char* msg = Fmt("Number of fields don't match in BaseWriterBackend::Write() (%d vs. %d)",
+		const char* msg = Fmt("Number of fields don't match in BaseWriterBackend::Write() (%d vs. %zu)",
 		                      arg_num_fields, num_fields);
 		Debug(DBG_LOGGING, msg);
 #endif

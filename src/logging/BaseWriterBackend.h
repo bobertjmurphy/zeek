@@ -211,7 +211,7 @@ class BaseWriterBackend : public threading::MsgThread
 		/**
 		 * Returns the number of log fields as passed into the constructor.
 		 */
-		int NumFields() const
+		size_t NumFields() const
 			{
 			return num_fields;
 			}
@@ -572,7 +572,7 @@ class BaseWriterBackend : public threading::MsgThread
 		WriterFrontend* frontend;
 
 		const WriterInfo* info;    // Meta information.
-		int num_fields;    // Number of log fields.
+		size_t num_fields;    // Number of log fields.
 		const threading::Field* const*  fields;    // Log fields.
 		bool buffering;    // True if buffering is enabled.
 
