@@ -413,12 +413,26 @@ class BaseWriterBackend : public threading::MsgThread
 		virtual bool DoHeartbeat(double network_time, double current_time) = 0;
 
 		/**
+		 * Return value from WriteLogs()
+		 */
+		struct WriteLogsResult
+			{
+			size_t	num_successful_writes;
+			bool 	no_fatal_errors;
+			};
+
+		/**
 		 * Perform a "low-level" write request that actually tries to write one or
 		 * more log records to the target.
 		 *
 		 * It must be implemented, and only implemented, by direct
 		 * child classes of BaseWriterBackend, and its implementation is at the
 		 * heart of the difference between a batching and non-batching writer.
+		 *
+		 * When writing a sequence of logs with a single call to WriteLogs(), if
+		 * a log fails to write, the writer must not write any logs after that log.
+		 * However, the writer may report multiple reasons for failure for different
+		 * parts of the sequence via a call to HandleWriteErrors().
 		 *
 		 * @param num_writes: The number of log records to be written with
 		 * this call.
@@ -428,12 +442,14 @@ class BaseWriterBackend : public threading::MsgThread
 		 * must match with the field passed to Init(). The method takes ownership
 		 * of \a vals.
 		 *
-		 * @return true on no fatal errors, false on a fatal error. If there
+		 * @return WriteLogsResult, where:
+		 * num_successful_writes is the number of logs that were successfully written.
+		 * no_fatal_errors is true on no fatal errors, false on a fatal error. If there
 		 * were any fatal errors, an implementation should also call Error() to
 		 * indicate what happened, and the writer and its thread will eventually
 		 * be terminated.
 		 */
-		virtual bool WriteLogs(size_t num_writes, threading::Value*** vals) = 0;
+		virtual WriteLogsResult WriteLogs(size_t num_writes, threading::Value*** vals) = 0;
 
 		/**
 		 * Deletes the values as passed into Write().
@@ -581,25 +597,6 @@ class BaseWriterBackend : public threading::MsgThread
 		// Statistics support
 		std::string m_stream_name;
 		std::string m_filter_name;
-
-		/**
-		 * Internal implementation, used by Write() that calls subclasses' WriteLogs()
-		 * implementations.
-		 *
-		 * @param num_writes: The number of log records to be written with
-		 * this call.
-		 *
-		 * @param vals: An array of size \a num_fields *  \a num_writes with the
-		 * log values. Within each group of \a num_fields values, their types
-		 * must match with the field passed to Init(). The method takes ownership
-		 * of \a vals.
-		 *
-		 * @return true on no fatal errors, false on a fatal error. If there
-		 * were any fatal errors, an implementation should also call Error() to
-		 * indicate what happened, and the writer and its thread will eventually
-		 * be terminated.
-		 */
-		bool InternalWrite(size_t num_writes, threading::Value*** vals);
 	};
 
 

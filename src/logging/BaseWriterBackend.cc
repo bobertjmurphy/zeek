@@ -264,7 +264,8 @@ bool BaseWriterBackend::Init(int arg_num_fields, const Field* const* arg_fields)
 
 bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
 	{
-	assert(num_writes >= 0);
+	if ( Failed() ||  num_writes <= 0 )
+		return true;
 
 	// Double-check that the arguments match. If we get this from remote,
 	// something might be mixed up.
@@ -301,9 +302,9 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
 			}
 		}
 
-	size_t logs_to_write = std::max(num_writes, 0);
-	m_logs_received += logs_to_write;
-	bool no_fatal_errors = this->InternalWrite(logs_to_write, vals);
+	m_logs_received += num_writes;
+	WriteLogsResult write_logs_result = WriteLogs(num_writes, vals);
+	bool no_fatal_errors = write_logs_result.no_fatal_errors;
 
 	// Don't call DeleteVals() here - BaseWriterBackend caches vals, and
 	// accesses it after this function returns, so deleting vals here will
@@ -311,21 +312,6 @@ bool BaseWriterBackend::Write(int arg_num_fields, int num_writes, Value*** vals)
 
 	if ( ! no_fatal_errors )
 		DisableFrontend();
-
-	return no_fatal_errors;
-	}
-
-bool BaseWriterBackend::InternalWrite(size_t num_writes, threading::Value*** vals)
-	{
-	// Exit early if nothing is to be written
-	if (num_writes == 0)
-		{
-		return true;		// No fatal errors
-		}
-
-	bool no_fatal_errors = this->WriteLogs(num_writes, vals);
-
-	// Don't delete vals - batching writers may be caching them
 
 	return no_fatal_errors;
 	}

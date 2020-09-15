@@ -60,22 +60,10 @@ class WriterBackend : public BaseWriterBackend
 		                     threading::Value** vals) = 0;
 
 		/**
-		 * This class's non-batching implementation of WriteLogs
-		 *
-		 * @param num_writes: The number of log records to be written with
-		 * this call.
-		 *
-		 * @param vals: An array of size \a num_fields *  \a num_writes with the
-		 * log values. Within each group of \a num_fields values, their types
-		 * must match with the field passed to Init(). The method takes ownership
-		 * of \a vals.
-		 *
-		 * @return true on no fatal errors, false on a fatal error. If there
-		 * were any fatal errors, an implementation should also call Error() to
-		 * indicate what happened, and the writer and its thread will eventually
-		 * be terminated.
+		 * This class's non-batching implementation of WriteLogs. See the prototype in the
+		 * BaseWriterBackend implementation for details.
 		 */
-		virtual bool WriteLogs(size_t num_writes, threading::Value*** vals) override final;
+		virtual WriteLogsResult WriteLogs(size_t num_writes, threading::Value*** vals) override final;
 	};
 
 }

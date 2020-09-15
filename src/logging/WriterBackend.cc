@@ -25,7 +25,7 @@ bool logging::WriterBackend::OnFinish(double network_time)
 	return DoFinish(network_time);		// Implemented by the writers
 	}
 
-bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
+logging::BaseWriterBackend::WriteLogsResult logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
 	{
 	// Get necessary values
 	int num_fields = this->NumFields();
@@ -53,5 +53,8 @@ bool logging::WriterBackend::WriteLogs(size_t num_writes, threading::Value*** va
 	// Report statistics
 	ReportWriteStatistics(num_writes, num_successful_writes);
 
-	return no_fatal_errors;
+	WriteLogsResult result;
+	result.num_successful_writes = num_successful_writes;
+	result.no_fatal_errors = no_fatal_errors;
+	return result;
 	}

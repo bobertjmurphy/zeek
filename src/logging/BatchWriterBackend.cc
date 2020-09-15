@@ -56,7 +56,7 @@ logging::BaseWriterBackend::WriterInfo::config_map logging::BatchWriterBackend::
 	}
 
 
-bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
+logging::BaseWriterBackend::WriteLogsResult logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*** vals)
 	{
 	if (num_writes > 0)
 		{
@@ -72,7 +72,11 @@ bool logging::BatchWriterBackend::WriteLogs(size_t num_writes, threading::Value*
 	// If needed, write a batch, without forcing it
 	double current_wallclock_time = current_time(true);
 	bool no_fatal_errors = WriteBatchIfNeeded(false, current_wallclock_time);
-	return no_fatal_errors;
+
+	WriteLogsResult result;
+	result.num_successful_writes = num_writes;
+	result.no_fatal_errors = no_fatal_errors;
+	return result;
 	}
 
 void logging::BatchWriterBackend::DeleteCachedLogRecords(size_t first_index, size_t n_records)
